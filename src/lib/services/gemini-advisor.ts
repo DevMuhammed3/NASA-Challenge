@@ -6,35 +6,77 @@ import type {
 const GEMINI_MODEL = process.env.AI_MODEL || "gemini-2.5-flash";
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "llama3.3";
 
+// In-memory cache to guarantee instant (<1ms) response on repeated requests
+const advisorAnalysisCache = new Map<
+  string,
+  { data: AiAdvisorAnalysis; expiresAt: number }
+>();
+const CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutes
+
+export function getOllamaBaseUrl(): string {
+  const custom = process.env.OLLAMA_BASE_URL?.trim();
+  if (custom && custom.length > 0) {
+    return custom.replace(/\/$/, "");
+  }
+  return "http://127.0.0.1:11434";
+}
+
 export function isGeminiAvailable(): boolean {
   const key = process.env.GEMINI_API_KEY;
   return Boolean(key && key.trim().length > 0);
 }
 
 export function isOllamaAvailable(): boolean {
-  const key = process.env.OLLAMA_API_KEY;
-  const host = process.env.OLLAMA_BASE_URL;
-  return Boolean((key && key.trim().length > 0) || (host && host.trim().length > 0));
+  const key = process.env.OLLAMA_API_KEY?.trim();
+  const host = process.env.OLLAMA_BASE_URL?.trim();
+  const provider = (process.env.AI_PROVIDER || "").toLowerCase();
+  return Boolean(
+    (key && key.length > 0) || (host && host.length > 0) || provider === "ollama"
+  );
 }
 
 export function isAiAdvisorConfigured(): boolean {
   return isGeminiAvailable() || isOllamaAvailable();
 }
 
-async function callOllama(prompt: string): Promise<string> {
-  const ollamaKey = process.env.OLLAMA_API_KEY;
-  const baseUrl = (process.env.OLLAMA_BASE_URL || "https://api.ollama.com").replace(
-    /\/$/,
-    ""
-  );
-
+/**
+ * Fast ping check (<= 1.2s) to verify Ollama daemon is actively listening.
+ * Avoids wasting 25-45 seconds when Ollama service is stopped or unreachable.
+ */
+async function checkOllamaAlive(baseUrl: string): Promise<boolean> {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 25000);
+  const timeoutId = setTimeout(() => controller.abort(), 1200);
 
   try {
-    // 1. Try standard Ollama /api/chat
-    const url = `${baseUrl}/api/chat`;
-    const res = await fetch(url, {
+    const res = await fetch(`${baseUrl}/api/tags`, {
+      method: "GET",
+      signal: controller.signal,
+    });
+    return res.ok || res.status === 401 || res.status === 403;
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+export async function callOllama(prompt: string): Promise<string> {
+  const ollamaKey = process.env.OLLAMA_API_KEY?.trim();
+  const baseUrl = getOllamaBaseUrl();
+
+  // 1. Fast fail check: If Ollama daemon is not responding, bail immediately (<1.2s)
+  const isAlive = await checkOllamaAlive(baseUrl);
+  if (!isAlive) {
+    throw new Error(`Ollama service unreachable at ${baseUrl}`);
+  }
+
+  const controller = new AbortController();
+  // Bound max execution time to 12s so it doesn't block the browser
+  const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+  try {
+    // 2. Try native Ollama /api/chat with speed optimizations
+    const res = await fetch(`${baseUrl}/api/chat`, {
       method: "POST",
       signal: controller.signal,
       headers: {
@@ -45,6 +87,12 @@ async function callOllama(prompt: string): Promise<string> {
         model: OLLAMA_MODEL,
         messages: [{ role: "user", content: prompt }],
         stream: false,
+        keep_alive: "30m",
+        options: {
+          temperature: 0.15,
+          num_predict: 1200,
+          top_p: 0.9,
+        },
       }),
     });
 
@@ -53,9 +101,8 @@ async function callOllama(prompt: string): Promise<string> {
       if (json.message?.content) return json.message.content;
     }
 
-    // 2. Fallback to OpenAI-compatible /v1/chat/completions
-    const v1Url = `${baseUrl}/v1/chat/completions`;
-    const v1Res = await fetch(v1Url, {
+    // 3. Fallback to OpenAI-compatible /v1/chat/completions (e.g. LiteLLM / proxy)
+    const v1Res = await fetch(`${baseUrl}/v1/chat/completions`, {
       method: "POST",
       signal: controller.signal,
       headers: {
@@ -65,16 +112,17 @@ async function callOllama(prompt: string): Promise<string> {
       body: JSON.stringify({
         model: OLLAMA_MODEL,
         messages: [{ role: "user", content: prompt }],
+        max_tokens: 1200,
+        temperature: 0.15,
       }),
     });
 
-    if (!v1Res.ok) {
-      const err = await v1Res.text().catch(() => "");
-      throw new Error(`Ollama HTTP ${v1Res.status}: ${err.slice(0, 150)}`);
+    if (v1Res.ok) {
+      const v1Json = await v1Res.json();
+      return v1Json.choices?.[0]?.message?.content || "";
     }
 
-    const v1Json = await v1Res.json();
-    return v1Json.choices?.[0]?.message?.content || "";
+    throw new Error(`Ollama returned status ${res.status || v1Res.status}`);
   } finally {
     clearTimeout(timeoutId);
   }
@@ -83,17 +131,24 @@ async function callOllama(prompt: string): Promise<string> {
 export async function generateEnvironmentalAnalysis(
   telemetry: EnvironmentalDataResponse
 ): Promise<AiAdvisorAnalysis> {
-  const geminiKey = process.env.GEMINI_API_KEY;
-  const ollamaKey = process.env.OLLAMA_API_KEY;
+  const geminiKey = process.env.GEMINI_API_KEY?.trim();
+  const ollamaConfigured = isOllamaAvailable();
   const preferredProvider = (process.env.AI_PROVIDER || "google").toLowerCase();
 
-  if (!geminiKey && !ollamaKey) {
-    throw new Error(
-      "Neither GEMINI_API_KEY nor OLLAMA_API_KEY is configured on the server. AI Advisor is disabled."
-    );
+  const { location, summaryStats, latestObservation, sourceName } = telemetry;
+
+  // 1. Instant Cache Check: return cached analysis if fresh (<15 minutes)
+  const cacheKey = `${location.latitude.toFixed(4)}_${location.longitude.toFixed(4)}_${latestObservation.date}_${preferredProvider}`;
+  const cached = advisorAnalysisCache.get(cacheKey);
+  if (cached && Date.now() < cached.expiresAt) {
+    return cached.data;
   }
 
-  const { location, summaryStats, latestObservation, sourceName } = telemetry;
+  if (!geminiKey && !ollamaConfigured) {
+    // If no provider is configured, return deterministic fallback immediately (<1ms)
+    return generateDeterministicFallbackAnalysis(telemetry);
+  }
+
   const temp = summaryStats.temperature;
   const precip = summaryStats.precipitation;
   const humidity = summaryStats.humidity;
@@ -165,82 +220,72 @@ Return your response formatted cleanly with these 6 exact section headers:
   let activeProviderName = "Google Gemini";
   let activeModelName = GEMINI_MODEL;
 
-  // Option A: If Ollama is preferred provider
-  if (preferredProvider === "ollama" && ollamaKey) {
+  // Primary Provider: Ollama if requested
+  if (preferredProvider === "ollama" && ollamaConfigured) {
     try {
       rawGeneratedText = await callOllama(structuredPrompt);
       activeProviderName = "Ollama";
       activeModelName = OLLAMA_MODEL;
     } catch (ollamaErr) {
-      console.warn("Ollama call failed, trying Google Gemini fallback:", ollamaErr);
+      console.warn("Ollama call failed or daemon offline, trying fallback:", ollamaErr);
     }
   }
 
-  // Option B: Google Gemini
+  // Primary Provider: Google Gemini (or fallback if Ollama failed)
   if (!rawGeneratedText && geminiKey) {
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${geminiKey}`;
+    const controller = new AbortController();
+    // Fast timeout: 9 seconds max
+    const timeoutId = setTimeout(() => controller.abort(), 9000);
 
-    for (let attempt = 1; attempt <= 2; attempt++) {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 20000);
-
-      try {
-        const res = await fetch(endpoint, {
-          method: "POST",
-          signal: controller.signal,
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [
-              {
-                role: "user",
-                parts: [{ text: structuredPrompt }],
-              },
-            ],
-            generationConfig: {
-              temperature: 0.2,
-              maxOutputTokens: 8192,
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        signal: controller.signal,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ role: "user", parts: [{ text: structuredPrompt }] }],
+          generationConfig: {
+            temperature: 0.15,
+            maxOutputTokens: 2500,
+            thinkingConfig: {
+              thinkingBudget: 0, // Disable slow reasoning loop for fast generation (<3-5s)
             },
-          }),
-        });
+          },
+        }),
+      });
 
-        clearTimeout(timeoutId);
-
-        if (res.ok) {
-          const json = await res.json();
-          rawGeneratedText =
-            json?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-          if (rawGeneratedText) {
-            activeProviderName = "Google Gemini";
-            activeModelName = GEMINI_MODEL;
-            break;
-          }
-        } else if (attempt === 1) {
-          await new Promise((r) => setTimeout(r, 1500));
-        }
-      } catch {
-        clearTimeout(timeoutId);
-        if (attempt === 1) {
-          await new Promise((r) => setTimeout(r, 1500));
+      if (res.ok) {
+        const json = await res.json();
+        rawGeneratedText =
+          json?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+        if (rawGeneratedText) {
+          activeProviderName = "Google Gemini";
+          activeModelName = GEMINI_MODEL;
         }
       }
+    } catch (geminiErr) {
+      console.warn("Google Gemini call timed out or failed:", geminiErr);
+    } finally {
+      clearTimeout(timeoutId);
     }
   }
 
-  // Option C: If Gemini failed and Ollama is configured, try Ollama as backup
-  if (!rawGeneratedText && ollamaKey && preferredProvider !== "ollama") {
+  // Secondary Provider: Ollama if Gemini was primary and failed
+  if (!rawGeneratedText && ollamaConfigured && preferredProvider !== "ollama") {
     try {
       rawGeneratedText = await callOllama(structuredPrompt);
       activeProviderName = "Ollama (Fallback)";
       activeModelName = OLLAMA_MODEL;
-    } catch (err) {
-      console.warn("Secondary Ollama backup also failed:", err);
+    } catch {
+      // Ollama also failed/offline, proceed to deterministic fallback
     }
   }
 
-  // If a live AI response was retrieved
+  // If a live AI response was retrieved, parse and cache it
   if (rawGeneratedText) {
     const sections = parseSections(rawGeneratedText);
-    return {
+    const result: AiAdvisorAnalysis = {
       timestamp: new Date().toISOString(),
       model: activeModelName,
       provider: activeProviderName,
@@ -249,10 +294,22 @@ Return your response formatted cleanly with these 6 exact section headers:
       sections,
       groundTruthNotice: `This advisory analysis was generated by ${activeProviderName} (${activeModelName}) from NASA POWER observations. Soil pH, NPK, salinity, and water rights must be tested in a laboratory before making agronomic commitments.`,
     };
+
+    advisorAnalysisCache.set(cacheKey, {
+      data: result,
+      expiresAt: Date.now() + CACHE_TTL_MS,
+    });
+
+    return result;
   }
 
-  // Option D: Deterministic Fallback if both remote providers are unreachable/busy
-  return generateDeterministicFallbackAnalysis(telemetry);
+  // Fast Deterministic Fallback if both remote providers are unreachable/busy
+  const fallback = generateDeterministicFallbackAnalysis(telemetry);
+  advisorAnalysisCache.set(cacheKey, {
+    data: fallback,
+    expiresAt: Date.now() + CACHE_TTL_MS,
+  });
+  return fallback;
 }
 
 function parseSections(text: string): {

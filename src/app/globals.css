@@ -1,65 +1,216 @@
 @import "tailwindcss";
 @import "leaflet/dist/leaflet.css";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
+@custom-variant dark (&:is(.dark *));
+
+/* GAIA — Earth Intelligence */
 @theme {
-  --color-gaia-bg: #28301C;
-  --color-gaia-surface: #323D25;
-  --color-gaia-surface-alt: #1F2616;
+  --color-gaia-bg: #F5F3E9;
+  --color-gaia-surface: #FFFFFF;
+  --color-gaia-surface-alt: #EEF0E6;
+
+  --color-gaia-forest: #243B2A;
+  --color-gaia-green: #41644A;
+  --color-gaia-sage: #8BA888;
+  --color-gaia-sand: #D6C99A;
   --color-gaia-gold: #9A7E3B;
-  --color-gaia-cream: #D2CF9A;
-  --color-gaia-muted: #9FA37C;
-  --color-gaia-border: #435133;
-  --color-gaia-sprout: #52B788;
+
+  --color-gaia-muted: #687365;
+  --color-gaia-border: #E2E6DA;
+  --color-gaia-sprout: #39845B;
 }
 
 :root {
-  --gaia-bg: #28301C;
-  --gaia-surface: #323D25;
+  color-scheme: light;
+
+  --background: #F5F3E9;
+  --foreground: #28301C;
+
+  --card: #FFFFFF;
+  --card-foreground: #28301C;
+
+  --popover: #FFFFFF;
+  --popover-foreground: #28301C;
+
+  --primary: #41644A;
+  --primary-foreground: #FFFFFF;
+
+  --secondary: #EEF0E6;
+  --secondary-foreground: #243B2A;
+
+  --muted: #EEF0E6;
+  --muted-foreground: #687365;
+
+  --accent: #D6C99A;
+  --accent-foreground: #28301C;
+
+  --destructive: #B91C1C;
+  --destructive-foreground: #FFFFFF;
+
+  --border: #E2E6DA;
+  --input: #DCE2D5;
+  --ring: #41644A;
+
+  --chart-1: #41644A;
+  --chart-2: #8BA888;
+  --chart-3: #9A7E3B;
+  --chart-4: #6C9FA0;
+  --chart-5: #B7A36A;
+
+  --radius: 0.75rem;
+
+  /* GAIA Custom Tokens */
+  --gaia-bg: #F5F3E9;
+  --gaia-surface: #FFFFFF;
+  --gaia-forest: #243B2A;
+  --gaia-green: #41644A;
+  --gaia-sage: #8BA888;
+  --gaia-sand: #D6C99A;
   --gaia-gold: #9A7E3B;
-  --gaia-cream: #D2CF9A;
-  --gaia-muted: #9FA37C;
-  --gaia-border: #435133;
+  --gaia-muted: #687365;
+  --gaia-border: #E2E6DA;
 }
 
-body {
-  background-color: #28301C;
-  color: #D2CF9A;
-  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+.dark {
+  --background: #F5F3E9;
+  --foreground: #28301C;
+  --card: #FFFFFF;
+  --card-foreground: #28301C;
+  --popover: #FFFFFF;
+  --popover-foreground: #28301C;
+  --primary: #41644A;
+  --primary-foreground: #FFFFFF;
+  --secondary: #EEF0E6;
+  --secondary-foreground: #243B2A;
+  --muted: #EEF0E6;
+  --muted-foreground: #687365;
+  --accent: #D6C99A;
+  --accent-foreground: #28301C;
+  --border: #E2E6DA;
+  --input: #DCE2D5;
+  --ring: #41644A;
 }
 
-/* Custom subtle scrollbars matching Dark Nature Theme */
+@theme inline {
+  --font-heading: var(--font-sans);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  button,
+  [role="button"] {
+    cursor: pointer;
+  }
+
+  html {
+    @apply font-sans;
+    color-scheme: light;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+}
+
+/* Unified Button Hover Behavior */
+.gaia-btn-primary {
+  background-color: #41644A;
+  color: #FFFFFF;
+  cursor: pointer;
+  transition: all 150ms ease-in-out;
+}
+.gaia-btn-primary:hover {
+  background-color: #34503B !important;
+  filter: brightness(0.96);
+}
+.gaia-btn-primary:active {
+  transform: scale(0.98);
+}
+
+.gaia-btn-outline {
+  border: 1px solid #E2E6DA;
+  background-color: #FFFFFF;
+  color: #28301C;
+  cursor: pointer;
+  transition: all 150ms ease-in-out;
+}
+.gaia-btn-outline:hover {
+  background-color: #EEF0E6 !important;
+  border-color: #B5C2AE !important;
+  color: #243B2A !important;
+}
+.gaia-btn-outline:active {
+  transform: scale(0.98);
+  background-color: #DCE2D5 !important;
+}
+
+/* Scrollbars */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #28301C;
+  background: #EEF0E6;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #435133;
+  background: #B5C2AE;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #9A7E3B;
+  background: #41644A;
 }
 
-/* Dark theme styling for Leaflet zoom controls and popups */
+/* Leaflet Controls */
 .leaflet-control-zoom a {
-  background-color: #28301C !important;
-  color: #D2CF9A !important;
-  border-color: #435133 !important;
+  background-color: #FFFFFF !important;
+  color: #243B2A !important;
+  border-color: #E2E6DA !important;
 }
 
 .leaflet-control-zoom a:hover {
-  background-color: #9A7E3B !important;
-  color: #28301C !important;
+  background-color: #41644A !important;
+  color: #FFFFFF !important;
 }
 
 .leaflet-popup-content-wrapper,
 .leaflet-popup-tip {
-  background: transparent !important;
-  box-shadow: none !important;
+  background: #FFFFFF !important;
+  color: #28301C !important;
+  box-shadow: 0 4px 16px rgba(36, 59, 42, 0.12) !important;
 }

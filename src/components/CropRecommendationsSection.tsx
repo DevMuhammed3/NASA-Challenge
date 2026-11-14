@@ -27,6 +27,12 @@ import type {
   RecommendationSummary,
 } from "@/lib/crops/suitability-engine";
 import { GREEN_VALLEY_LOCATION } from "@/lib/config/location";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 interface CropRecommendationsSectionProps {
   onNavigateToMap?: () => void;
@@ -135,219 +141,219 @@ export function CropRecommendationsSection({}: CropRecommendationsSectionProps) 
   );
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       {/* 1. Header & Mandatory Data Notice */}
-      <div className="rounded-2xl border border-[#435133] bg-[#323D25]/90 p-5 shadow-xl backdrop-blur-sm space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#435133]/60 pb-3">
+      <Card className="border-border bg-card/90 p-5 shadow-xl backdrop-blur-xs flex flex-col gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
           <div>
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#52B788]/20 px-2.5 py-0.5 text-xs font-semibold text-[#52B788] border border-[#52B788]/40">
-                <Sprout className="h-3.5 w-3.5" />
+              <Badge variant="outline" className="border-[#9A7E3B]/40 bg-[#9A7E3B]/20 text-[#28301C] font-semibold text-xs">
+                <Sprout className="size-3.5 mr-1 text-[#9A7E3B]" />
                 Evidence-Based Crop Evaluation
-              </span>
-              <span className="rounded bg-[#28301C] px-2 py-0.5 text-[11px] font-mono text-[#D2CF9A] border border-[#435133]">
+              </Badge>
+              <Badge variant="outline" className="border-border bg-background/80 font-mono text-[11px] text-foreground">
                 {GREEN_VALLEY_LOCATION.name}
-              </span>
+              </Badge>
             </div>
-            <h2 className="mt-1 text-xl sm:text-2xl font-bold text-[#D2CF9A]">
+            <h2 className="mt-1 text-xl sm:text-2xl font-bold text-foreground">
               Vegetable Suitability &amp; Planting Windows
             </h2>
-            <p className="mt-0.5 text-xs text-[#9FA37C]">
+            <p className="mt-0.5 text-xs text-muted-foreground">
               Deterministic evaluation matching 5-year NASA POWER satellite climate observations (2021–2025) with verified University of Arizona Extension &amp; FAO requirements.
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <button
+            <Button
+              size="sm"
               onClick={handleAnalyzeBestCrops}
               disabled={isAiLoading || !summary}
-              className="inline-flex items-center gap-2 rounded-xl bg-[#9A7E3B] px-4 py-2 text-xs font-bold text-[#28301C] transition hover:bg-[#D2CF9A] disabled:opacity-50 shadow-md"
+              className="bg-primary text-primary-foreground font-bold hover:bg-primary/90 shadow-md"
             >
-              <Sparkles className={`h-3.5 w-3.5 ${isAiLoading ? "animate-spin" : ""}`} />
+              <Sparkles
+                data-icon="inline-start"
+                className={`size-3.5 ${isAiLoading ? "animate-spin" : ""}`}
+              />
               {isAiLoading ? "Consulting AI Advisor..." : "Analyze Best Crops"}
-            </button>
+            </Button>
 
             {selectedForComparison.length > 0 && (
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setShowComparisonModal(true)}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-[#435133] bg-[#28301C] px-3.5 py-2 text-xs font-semibold text-[#D2CF9A] transition hover:border-[#9A7E3B] hover:text-[#9A7E3B]"
               >
-                <Scale className="h-3.5 w-3.5 text-[#9A7E3B]" />
+                <Scale data-icon="inline-start" className="size-3.5 text-primary" />
                 Compare Crops ({selectedForComparison.length})
-              </button>
+              </Button>
             )}
           </div>
         </div>
 
         {/* Farmer-Friendly Data Notice */}
-        <div className="flex items-start gap-3 rounded-xl border border-[#9A7E3B]/40 bg-[#9A7E3B]/10 p-3.5 text-xs text-[#D2CF9A]">
-          <Info className="h-4 w-4 shrink-0 text-[#9A7E3B] mt-0.5" />
-          <div className="leading-relaxed">
-            <strong className="text-[#D2CF9A]">Essential Ground Truth Notice:</strong> These recommendations are calculated from <strong>regional atmospheric satellite data</strong> (temperatures, solar irradiance, rainfall patterns) and published university horticultural standards. They assume a functioning <strong>irrigation system</strong>. 
-            <span className="block mt-1 text-[#9FA37C]">
+        <Alert className="border-primary/40 bg-primary/10 text-foreground">
+          <Info className="size-4 text-primary shrink-0" />
+          <AlertDescription className="text-xs leading-relaxed">
+            <strong className="text-foreground">Essential Ground Truth Notice:</strong> These recommendations are calculated from <strong>regional atmospheric satellite data</strong> (temperatures, solar irradiance, rainfall patterns) and published university horticultural standards. They assume a functioning <strong>irrigation system</strong>. 
+            <span className="block mt-1 text-muted-foreground">
               NASA satellite sensors cannot measure your specific farm soil pH, salt levels (salinity EC), nutrients (NPK), or subsoil drainage. Always verify your soil through a certified laboratory before purchasing seeds or equipment.
             </span>
-          </div>
-        </div>
+          </AlertDescription>
+        </Alert>
 
         {/* Environmental Indicators Summary for Crops */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono pt-1">
-          <div className="rounded-lg bg-[#28301C]/80 p-2.5 border border-[#435133]">
-            <span className="text-[#9FA37C] text-[10px] uppercase block">Location & Elevation</span>
-            <span className="text-[#D2CF9A] font-bold">Green Valley, AZ</span>
-            <span className="text-[10px] text-[#9FA37C] block">962m / ~3,150 ft (Low-Mid Desert)</span>
+          <div className="rounded-lg bg-background/80 p-2.5 border border-border">
+            <span className="text-muted-foreground text-[10px] uppercase block">Location &amp; Elevation</span>
+            <span className="text-foreground font-bold">Green Valley, AZ</span>
+            <span className="text-[10px] text-muted-foreground block">962m / ~3,150 ft (Low-Mid Desert)</span>
           </div>
-          <div className="rounded-lg bg-[#28301C]/80 p-2.5 border border-[#435133]">
-            <span className="text-[#9FA37C] text-[10px] uppercase block">Temperature Extremes</span>
-            <span className="text-[#D2CF9A] font-bold">-4.4°C to 45.0°C</span>
-            <span className="text-[10px] text-[#E09F3E] block">Bimodal seasonal swings</span>
+          <div className="rounded-lg bg-background/80 p-2.5 border border-border">
+            <span className="text-muted-foreground text-[10px] uppercase block">Temperature Extremes</span>
+            <span className="text-foreground font-bold">-4.4°C to 45.0°C</span>
+            <span className="text-[10px] text-primary block">Bimodal seasonal swings</span>
           </div>
-          <div className="rounded-lg bg-[#28301C]/80 p-2.5 border border-[#435133]">
-            <span className="text-[#9FA37C] text-[10px] uppercase block">Annual Rainfall Deficit</span>
-            <span className="text-[#48CAE4] font-bold">306.8 mm/yr avg</span>
-            <span className="text-[10px] text-red-300 block">Drip irrigation strictly mandatory</span>
+          <div className="rounded-lg bg-background/80 p-2.5 border border-border">
+            <span className="text-muted-foreground text-[10px] uppercase block">Annual Rainfall Deficit</span>
+            <span className="text-sky-400 font-bold">306.8 mm/yr avg</span>
+            <span className="text-[10px] text-destructive block">Drip irrigation strictly mandatory</span>
           </div>
-          <div className="rounded-lg bg-[#28301C]/80 p-2.5 border border-[#435133]">
-            <span className="text-[#9FA37C] text-[10px] uppercase block">Solar Resource</span>
-            <span className="text-[#D2CF9A] font-bold">21.1 MJ/m²/day</span>
-            <span className="text-[10px] text-[#52B788] block">Abundant photosynthetic light</span>
+          <div className="rounded-lg bg-background/80 p-2.5 border border-border">
+            <span className="text-muted-foreground text-[10px] uppercase block">Solar Resource</span>
+            <span className="text-foreground font-bold">21.1 MJ/m²/day</span>
+            <span className="text-[10px] text-[#9A7E3B] font-semibold block">Abundant photosynthetic light</span>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* 2. AI Advisor Report Section (if generated) */}
       {aiReport && (
-        <div className="rounded-2xl border border-[#9A7E3B]/60 bg-[#28301C] p-5 shadow-xl space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#435133] pb-3">
+        <Card className="border-primary/60 bg-card p-5 shadow-xl flex flex-col gap-4">
+          <CardHeader className="p-0 pb-3 flex flex-wrap items-center justify-between gap-2 border-b border-border">
             <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-[#9A7E3B]" />
-              <h3 className="text-base font-bold text-[#D2CF9A]">
+              <Sparkles className="size-4 text-primary" />
+              <CardTitle className="text-base font-bold text-foreground">
                 AI Agronomic Analysis ({aiReport.provider} — {aiReport.model})
-              </h3>
+              </CardTitle>
             </div>
-            <span className="text-[11px] text-[#9FA37C]">
+            <span className="text-[11px] text-muted-foreground">
               Grounded exclusively in NASA observations and UA Extension publications
             </span>
-          </div>
+          </CardHeader>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Section A */}
-            <div className="rounded-xl border border-[#435133] bg-[#323D25]/70 p-4 space-y-2">
-              <div className="flex items-center gap-2 text-[#52B788] font-bold text-sm border-b border-[#435133]/60 pb-1.5">
-                <CheckCircle2 className="h-4 w-4" />
-                <h4>A. Best Potential Crops</h4>
-              </div>
-              <div className="text-xs text-[#D2CF9A]/95 leading-relaxed whitespace-pre-line">
-                {aiReport.sections.bestCrops}
-              </div>
+          <CardContent className="p-0 flex flex-col gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Section A */}
+              <Card className="border-border bg-background/50 p-4 shadow-none flex flex-col gap-2">
+                <div className="flex items-center gap-2 text-[#9A7E3B] font-bold text-sm border-b border-border pb-1.5">
+                  <CheckCircle2 className="size-4" />
+                  <h4>A. Best Potential Crops</h4>
+                </div>
+                <div className="text-xs text-foreground/95 leading-relaxed whitespace-pre-line">
+                  {aiReport.sections.bestCrops}
+                </div>
+              </Card>
+
+              {/* Section B */}
+              <Card className="border-border bg-background/50 p-4 shadow-none flex flex-col gap-2">
+                <div className="flex items-center gap-2 text-primary font-bold text-sm border-b border-border pb-1.5">
+                  <ShieldAlert className="size-4" />
+                  <h4>B. Crops With Important Risks</h4>
+                </div>
+                <div className="text-xs text-foreground/95 leading-relaxed whitespace-pre-line">
+                  {aiReport.sections.riskyCrops}
+                </div>
+              </Card>
+
+              {/* Section C */}
+              <Card className="border-border bg-background/50 p-4 shadow-none flex flex-col gap-2">
+                <div className="flex items-center gap-2 text-[#9A7E3B] font-bold text-sm border-b border-border pb-1.5">
+                  <Calendar className="size-4" />
+                  <h4>C. Preliminary Planting Calendar</h4>
+                </div>
+                <div className="text-xs text-foreground/95 leading-relaxed whitespace-pre-line">
+                  {aiReport.sections.plantingCalendar}
+                </div>
+              </Card>
+
+              {/* Section D */}
+              <Card className="border-border bg-background/50 p-4 shadow-none flex flex-col gap-2">
+                <div className="flex items-center gap-2 text-primary font-bold text-sm border-b border-border pb-1.5">
+                  <FileQuestion className="size-4" />
+                  <h4>D. Missing Information to Test</h4>
+                </div>
+                <div className="text-xs text-foreground/95 leading-relaxed whitespace-pre-line">
+                  {aiReport.sections.missingInformation}
+                </div>
+              </Card>
             </div>
 
-            {/* Section B */}
-            <div className="rounded-xl border border-[#435133] bg-[#323D25]/70 p-4 space-y-2">
-              <div className="flex items-center gap-2 text-[#E09F3E] font-bold text-sm border-b border-[#435133]/60 pb-1.5">
-                <ShieldAlert className="h-4 w-4" />
-                <h4>B. Crops With Important Risks</h4>
+            {/* Section E: Practical Recommendation Full-Width */}
+            <Card className="border-[#9A7E3B]/40 bg-background/60 p-4 shadow-none flex flex-col gap-2">
+              <div className="flex items-center gap-2 text-[#9A7E3B] font-bold text-sm border-b border-border pb-1.5">
+                <ArrowRight className="size-4" />
+                <h4>E. Practical Conclusion &amp; Next Steps for the Grower</h4>
               </div>
-              <div className="text-xs text-[#D2CF9A]/95 leading-relaxed whitespace-pre-line">
-                {aiReport.sections.riskyCrops}
+              <div className="text-xs text-foreground leading-relaxed whitespace-pre-line">
+                {aiReport.sections.practicalRecommendation}
               </div>
-            </div>
-
-            {/* Section C */}
-            <div className="rounded-xl border border-[#435133] bg-[#323D25]/70 p-4 space-y-2">
-              <div className="flex items-center gap-2 text-[#74C69D] font-bold text-sm border-b border-[#435133]/60 pb-1.5">
-                <Calendar className="h-4 w-4" />
-                <h4>C. Preliminary Planting Calendar</h4>
-              </div>
-              <div className="text-xs text-[#D2CF9A]/95 leading-relaxed whitespace-pre-line">
-                {aiReport.sections.plantingCalendar}
-              </div>
-            </div>
-
-            {/* Section D */}
-            <div className="rounded-xl border border-[#435133] bg-[#323D25]/70 p-4 space-y-2">
-              <div className="flex items-center gap-2 text-[#9A7E3B] font-bold text-sm border-b border-[#435133]/60 pb-1.5">
-                <FileQuestion className="h-4 w-4" />
-                <h4>D. Missing Information to Test</h4>
-              </div>
-              <div className="text-xs text-[#D2CF9A]/95 leading-relaxed whitespace-pre-line">
-                {aiReport.sections.missingInformation}
-              </div>
-            </div>
-          </div>
-
-          {/* Section E: Practical Recommendation Full-Width */}
-          <div className="rounded-xl border border-[#52B788]/40 bg-[#323D25] p-4 space-y-2">
-            <div className="flex items-center gap-2 text-[#52B788] font-bold text-sm border-b border-[#435133]/60 pb-1.5">
-              <ArrowRight className="h-4 w-4" />
-              <h4>E. Practical Conclusion &amp; Next Steps for the Grower</h4>
-            </div>
-            <div className="text-xs text-[#D2CF9A] leading-relaxed whitespace-pre-line">
-              {aiReport.sections.practicalRecommendation}
-            </div>
-          </div>
-        </div>
+            </Card>
+          </CardContent>
+        </Card>
       )}
 
       {/* AI Error banner if any */}
       {aiErrorMsg && (
-        <div className="rounded-xl border border-red-700/60 bg-red-900/20 p-3.5 text-xs text-red-200 flex items-start gap-2.5">
-          <AlertTriangle className="h-4 w-4 shrink-0 text-red-400 mt-0.5" />
-          <div>
-            <strong>AI Advisor Message:</strong> {aiErrorMsg}
-          </div>
-        </div>
+        <Alert variant="destructive">
+          <AlertTriangle className="size-4" />
+          <AlertTitle>AI Advisor Message</AlertTitle>
+          <AlertDescription>{aiErrorMsg}</AlertDescription>
+        </Alert>
       )}
 
       {/* 3. Crop Filter Bar & Toggles */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#435133] bg-[#323D25] p-3 text-xs">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card p-3 text-xs">
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="font-semibold text-[#9FA37C] mr-1">Filter Vegetables:</span>
-          <button
+          <span className="font-semibold text-muted-foreground mr-1">Filter Vegetables:</span>
+          <Button
+            size="sm"
+            variant={categoryFilter === "all" ? "default" : "outline"}
             onClick={() => setCategoryFilter("all")}
-            className={`rounded-md px-3 py-1 font-medium transition ${
-              categoryFilter === "all"
-                ? "bg-[#9A7E3B] text-[#28301C] font-bold"
-                : "bg-[#28301C] text-[#D2CF9A] hover:bg-[#435133]"
-            }`}
+            className={categoryFilter === "all" ? "font-bold shadow-xs" : ""}
           >
             All 15 Vegetables ({allEvaluations.length})
-          </button>
-          <button
+          </Button>
+          <Button
+            size="sm"
+            variant={categoryFilter === "cool" ? "default" : "outline"}
             onClick={() => setCategoryFilter("cool")}
-            className={`rounded-md px-3 py-1 font-medium transition ${
-              categoryFilter === "cool"
-                ? "bg-[#9A7E3B] text-[#28301C] font-bold"
-                : "bg-[#28301C] text-[#D2CF9A] hover:bg-[#435133]"
-            }`}
+            className={categoryFilter === "cool" ? "font-bold shadow-xs" : ""}
           >
             Cool-Season Crops (Fall - Spring)
-          </button>
-          <button
+          </Button>
+          <Button
+            size="sm"
+            variant={categoryFilter === "warm" ? "default" : "outline"}
             onClick={() => setCategoryFilter("warm")}
-            className={`rounded-md px-3 py-1 font-medium transition ${
-              categoryFilter === "warm"
-                ? "bg-[#9A7E3B] text-[#28301C] font-bold"
-                : "bg-[#28301C] text-[#D2CF9A] hover:bg-[#435133]"
-            }`}
+            className={categoryFilter === "warm" ? "font-bold shadow-xs" : ""}
           >
             Warm-Season Crops (Spring / Summer / Monsoon)
-          </button>
+          </Button>
         </div>
 
-        <div className="text-[11px] text-[#9FA37C]">
+        <div className="text-[11px] text-muted-foreground font-mono">
           Showing {filteredCrops.length} verified vegetable profiles
         </div>
       </div>
 
       {/* Loading Skeleton */}
       {isLoading && (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-[#435133] bg-[#323D25]/60 py-16 text-center">
-          <RefreshCw className="h-8 w-8 text-[#9A7E3B] animate-spin mb-3" />
-          <p className="text-sm font-semibold text-[#D2CF9A]">
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-border bg-card/60 py-16 text-center">
+          <RefreshCw className="size-8 text-primary animate-spin mb-3" />
+          <p className="text-sm font-semibold text-foreground">
             Evaluating Vegetable Requirements Against NASA POWER Observations...
           </p>
-          <p className="text-xs text-[#9FA37C] mt-1">
+          <p className="text-xs text-muted-foreground mt-1">
             Assessing heat stress limits, frost exposure, solar saturation, and rainfall deficits for Green Valley, AZ.
           </p>
         </div>
@@ -355,9 +361,11 @@ export function CropRecommendationsSection({}: CropRecommendationsSectionProps) 
 
       {/* Error state */}
       {errorMsg && (
-        <div className="rounded-xl border border-red-700/60 bg-red-900/25 p-4 text-xs text-red-200">
-          <strong>Evaluation Error:</strong> {errorMsg}
-        </div>
+        <Alert variant="destructive">
+          <AlertTriangle className="size-4" />
+          <AlertTitle>Evaluation Error</AlertTitle>
+          <AlertDescription>{errorMsg}</AlertDescription>
+        </Alert>
       )}
 
       {/* 4. Crop Cards Grid */}
@@ -371,44 +379,45 @@ export function CropRecommendationsSection({}: CropRecommendationsSectionProps) 
               item.classification === "Suitable with Irrigation in Season";
 
             return (
-              <div
+              <Card
                 key={item.crop.id}
-                className={`rounded-2xl border transition shadow-lg flex flex-col justify-between ${
+                className={`transition shadow-lg flex flex-col justify-between ${
                   isTopSuitable
-                    ? "border-[#52B788]/60 bg-[#323D25] hover:border-[#52B788]"
-                    : "border-[#435133] bg-[#323D25]/90 hover:border-[#9A7E3B]/70"
+                    ? "border-[#9A7E3B]/60 bg-card hover:border-[#9A7E3B]"
+                    : "border-border bg-card/90 hover:border-primary/70"
                 }`}
               >
                 {/* Card Top */}
-                <div className="p-5 space-y-3">
+                <CardContent className="p-5 flex flex-col gap-3">
                   {/* Badges row */}
                   <div className="flex flex-wrap items-center justify-between gap-1.5 text-xs">
-                    <span
-                      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold border ${
+                    <Badge
+                      variant="outline"
+                      className={
                         isTopSuitable
-                          ? "bg-[#52B788]/20 text-[#52B788] border-[#52B788]/40"
-                          : "bg-[#E09F3E]/20 text-[#E09F3E] border-[#E09F3E]/40"
-                      }`}
+                          ? "border-[#9A7E3B]/40 bg-[#9A7E3B]/20 text-[#28301C] font-bold text-[11px]"
+                          : "border-primary/40 bg-primary/20 text-primary font-semibold text-[11px]"
+                      }
                     >
                       {isTopSuitable ? (
-                        <CheckCircle2 className="h-3 w-3" />
+                        <CheckCircle2 className="size-3 mr-1 text-[#9A7E3B]" />
                       ) : (
-                        <AlertTriangle className="h-3 w-3" />
+                        <AlertTriangle className="size-3 mr-1" />
                       )}
                       {item.classification}
-                    </span>
+                    </Badge>
 
-                    <span className="rounded bg-[#28301C] px-2 py-0.5 text-[10px] text-[#9FA37C] border border-[#435133] capitalize">
+                    <Badge variant="outline" className="border-border bg-background font-mono text-[10px] text-muted-foreground capitalize">
                       {item.crop.category.replace("_", " ")}
-                    </span>
+                    </Badge>
                   </div>
 
                   {/* Crop Header */}
                   <div>
-                    <h3 className="text-lg font-bold text-[#D2CF9A]">
+                    <h3 className="text-lg font-bold text-foreground">
                       {item.crop.name}
                     </h3>
-                    <div className="flex items-center gap-2 text-xs text-[#9FA37C] italic">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground italic">
                       <span>{item.crop.scientificName}</span>
                       <span>•</span>
                       <span>{item.crop.botanicalFamily}</span>
@@ -416,26 +425,26 @@ export function CropRecommendationsSection({}: CropRecommendationsSectionProps) 
                   </div>
 
                   {/* Recommended Season */}
-                  <div className="rounded-lg bg-[#28301C]/80 p-2.5 border border-[#435133] text-xs">
-                    <span className="text-[#9FA37C] text-[10px] uppercase block font-semibold">
+                  <div className="rounded-lg bg-background/80 p-2.5 border border-border text-xs">
+                    <span className="text-muted-foreground text-[10px] uppercase block font-semibold">
                       Recommended Planting Window (UA Extension)
                     </span>
-                    <span className="text-[#D2CF9A] font-medium mt-0.5 block">
+                    <span className="text-foreground font-medium mt-0.5 block">
                       {item.crop.suitablePlantingWindows
                         .map((w) => w.seasonName)
                         .join(" or ")}
                     </span>
-                    <span className="text-[11px] text-[#9A7E3B] font-mono mt-0.5 block">
+                    <span className="text-[11px] text-primary font-mono mt-0.5 block">
                       Harvest: {item.crop.suitablePlantingWindows[0]?.harvestWindow}
                     </span>
                   </div>
 
                   {/* Supporting Factors */}
-                  <div className="space-y-1.5 text-xs">
-                    <span className="font-semibold text-[#52B788] text-[11px] uppercase tracking-wide block">
+                  <div className="flex flex-col gap-1.5 text-xs">
+                    <span className="font-semibold text-[#9A7E3B] text-[11px] uppercase tracking-wide block">
                       Key Climatic Supports:
                     </span>
-                    <ul className="list-disc list-inside space-y-1 text-[#D2CF9A]/90 text-[11px]">
+                    <ul className="list-disc list-inside flex flex-col gap-1 text-foreground/90 text-[11px]">
                       {item.primarySupportingFactors.slice(0, 2).map((s, idx) => (
                         <li key={idx} className="leading-snug">
                           {s}
@@ -445,11 +454,11 @@ export function CropRecommendationsSection({}: CropRecommendationsSectionProps) 
                   </div>
 
                   {/* Risks */}
-                  <div className="space-y-1.5 text-xs">
-                    <span className="font-semibold text-[#E09F3E] text-[11px] uppercase tracking-wide block">
+                  <div className="flex flex-col gap-1.5 text-xs">
+                    <span className="font-semibold text-primary text-[11px] uppercase tracking-wide block">
                       Documented Environmental Constraints:
                     </span>
-                    <ul className="list-disc list-inside space-y-1 text-[#D2CF9A]/80 text-[11px]">
+                    <ul className="list-disc list-inside flex flex-col gap-1 text-foreground/80 text-[11px]">
                       {item.primaryRiskFactors.slice(0, 2).map((r, idx) => (
                         <li key={idx} className="leading-snug">
                           {r}
@@ -460,203 +469,196 @@ export function CropRecommendationsSection({}: CropRecommendationsSectionProps) 
 
                   {/* Expandable Factor Breakdown */}
                   {isExpanded && (
-                    <div className="pt-3 border-t border-[#435133]/60 space-y-2 text-xs font-mono">
-                      <div className="p-2 rounded bg-[#28301C] text-[11px] space-y-1">
-                        <div className="text-[#9FA37C]">Thermal Limits:</div>
-                        <div className="text-[#D2CF9A]">
+                    <div className="pt-3 border-t border-border flex flex-col gap-2 text-xs font-mono">
+                      <div className="p-2.5 rounded-lg bg-background text-[11px] flex flex-col gap-1 border border-border">
+                        <div className="text-muted-foreground">Thermal Limits:</div>
+                        <div className="text-foreground">
                           Vegetative: {item.crop.suitableTempRange.min}°C – {item.crop.suitableTempRange.max}°C (Opt: {item.crop.suitableTempRange.optMin}–{item.crop.suitableTempRange.optMax}°C)
                         </div>
-                        <div className="text-[#E09F3E]">
+                        <div className="text-primary">
                           Absolute Injury Limit: {item.crop.temperatureToleranceLimits.absoluteMin}°C min / {item.crop.temperatureToleranceLimits.absoluteMax}°C max
                         </div>
                       </div>
 
-                      <div className="p-2 rounded bg-[#28301C] text-[11px] space-y-1">
-                        <div className="text-[#9FA37C]">Water &amp; Irrigation:</div>
-                        <div className="text-[#48CAE4]">
+                      <div className="p-2.5 rounded-lg bg-background text-[11px] flex flex-col gap-1 border border-border">
+                        <div className="text-muted-foreground">Water &amp; Irrigation:</div>
+                        <div className="text-sky-400">
                           Seasonal ETc: {item.crop.waterRequirements.seasonalNeedMm} mm ({item.crop.waterRequirements.category})
                         </div>
-                        <div className="text-[#D2CF9A]/90">
+                        <div className="text-foreground/90">
                           {item.crop.waterRequirements.description}
                         </div>
                       </div>
 
-                      <div className="p-2 rounded bg-[#28301C] text-[11px] space-y-1">
-                        <div className="text-[#9FA37C]">Soil Status (On-Farm):</div>
-                        <div className="text-red-300">
+                      <div className="p-2.5 rounded-lg bg-background text-[11px] flex flex-col gap-1 border border-border">
+                        <div className="text-muted-foreground">Soil Status (On-Farm):</div>
+                        <div className="text-destructive">
                           {item.factors.soilSuitability.headline}
                         </div>
-                        <div className="text-[#9FA37C] text-[10px]">
+                        <div className="text-muted-foreground text-[10px]">
                           Target pH: {item.crop.soilRequirements.preferredPhMin}–{item.crop.soilRequirements.preferredPhMax} | Salinity tolerance: {item.crop.soilRequirements.salinityTolerance}
                         </div>
                       </div>
 
-                      <div className="text-[10px] text-[#9FA37C] pt-1">
+                      <div className="text-[10px] text-muted-foreground pt-1">
                         Source:{" "}
                         <a
                           href={item.crop.references.sourceUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-[#9A7E3B] underline inline-flex items-center gap-0.5"
+                          className="text-primary underline inline-flex items-center gap-0.5"
                         >
-                          {item.crop.references.primarySource} <ExternalLink className="h-2.5 w-2.5" />
+                          {item.crop.references.primarySource} <ExternalLink className="size-2.5" />
                         </a>
                       </div>
                     </div>
                   )}
-                </div>
+                </CardContent>
 
                 {/* Card Bottom Actions */}
-                <div className="p-4 border-t border-[#435133]/60 bg-[#28301C]/50 rounded-b-2xl flex items-center justify-between text-xs">
-                  <button
+                <CardFooter className="p-4 border-t border-border bg-background/50 rounded-b-xl flex items-center justify-between text-xs">
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => setExpandedCropId(isExpanded ? null : item.crop.id)}
-                    className="inline-flex items-center gap-1 font-semibold text-[#D2CF9A] hover:text-[#9A7E3B] transition"
+                    className="font-semibold text-foreground hover:text-primary transition"
                   >
                     {isExpanded ? (
                       <>
-                        Less Details <ChevronUp className="h-3.5 w-3.5" />
+                        Less Details <ChevronUp data-icon="inline-end" className="size-3.5" />
                       </>
                     ) : (
                       <>
-                        Scientific Details <ChevronDown className="h-3.5 w-3.5" />
+                        Scientific Details <ChevronDown data-icon="inline-end" className="size-3.5" />
                       </>
                     )}
-                  </button>
+                  </Button>
 
-                  <button
+                  <Button
+                    size="xs"
+                    variant={isCompared ? "default" : "outline"}
                     onClick={() => toggleComparison(item.crop.id)}
-                    className={`rounded px-2.5 py-1 text-[11px] font-medium border transition ${
-                      isCompared
-                        ? "bg-[#9A7E3B] text-[#28301C] border-[#9A7E3B] font-bold"
-                        : "border-[#435133] text-[#9FA37C] hover:text-[#D2CF9A] hover:border-[#9A7E3B]"
-                    }`}
+                    className={isCompared ? "font-bold" : ""}
                   >
                     {isCompared ? "Selected for Compare" : "+ Compare"}
-                  </button>
-                </div>
-              </div>
+                  </Button>
+                </CardFooter>
+              </Card>
             );
           })}
         </div>
       )}
 
-      {/* 5. Crop Comparison Modal / Drawer */}
-      {showComparisonModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
-          <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-2xl border border-[#435133] bg-[#28301C] p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-[#435133] pb-3">
-              <div className="flex items-center gap-2">
-                <Scale className="h-5 w-5 text-[#9A7E3B]" />
-                <h3 className="text-base font-bold text-[#D2CF9A]">
-                  Side-by-Side Crop Comparison (Green Valley Climate)
-                </h3>
-              </div>
-              <button
-                onClick={() => setShowComparisonModal(false)}
-                className="rounded-lg p-1 text-[#9FA37C] hover:text-[#D2CF9A]"
-              >
-                <X className="h-5 w-5" />
-              </button>
+      {/* 5. Crop Comparison Dialog */}
+      <Dialog open={showComparisonModal} onOpenChange={setShowComparisonModal}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-card border-border text-foreground">
+          <DialogHeader className="border-b border-border pb-3">
+            <div className="flex items-center gap-2">
+              <Scale className="size-5 text-primary" />
+              <DialogTitle className="text-base font-bold text-foreground">
+                Side-by-Side Crop Comparison (Green Valley Climate)
+              </DialogTitle>
             </div>
+            <DialogDescription className="text-xs text-muted-foreground">
+              Compare climatic requirements, thermal thresholds, and water needs.
+            </DialogDescription>
+          </DialogHeader>
 
-            {comparedCropObjects.length === 0 ? (
-              <p className="text-xs text-[#9FA37C] py-8 text-center">
-                No crops selected. Click &quot;+ Compare&quot; on any crop card to add it to the comparison view.
-              </p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs font-mono">
-                  <thead>
-                    <tr className="border-b border-[#435133] text-[11px] uppercase text-[#9FA37C]">
-                      <th className="py-2.5 pr-3">Attribute</th>
-                      {comparedCropObjects.map((c) => (
-                        <th key={c.crop.id} className="py-2.5 px-3 font-bold text-[#D2CF9A]">
-                          {c.crop.name}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#435133]/40">
-                    <tr>
-                      <td className="py-2.5 pr-3 text-[#9FA37C] font-sans font-semibold">Classification</td>
-                      {comparedCropObjects.map((c) => (
-                        <td key={c.crop.id} className="py-2.5 px-3">
-                          <span className="text-[#D2CF9A] font-bold">{c.classification}</span>
-                        </td>
-                      ))}
-                    </tr>
-                    <tr>
-                      <td className="py-2.5 pr-3 text-[#9FA37C] font-sans font-semibold">Seasonal Category</td>
-                      {comparedCropObjects.map((c) => (
-                        <td key={c.crop.id} className="py-2.5 px-3 capitalize">
-                          {c.crop.category.replace("_", " ")}
-                        </td>
-                      ))}
-                    </tr>
-                    <tr>
-                      <td className="py-2.5 pr-3 text-[#9FA37C] font-sans font-semibold">Optimal Temperature</td>
-                      {comparedCropObjects.map((c) => (
-                        <td key={c.crop.id} className="py-2.5 px-3 text-[#52B788]">
-                          {c.crop.suitableTempRange.optMin}°C – {c.crop.suitableTempRange.optMax}°C
-                        </td>
-                      ))}
-                    </tr>
-                    <tr>
-                      <td className="py-2.5 pr-3 text-[#9FA37C] font-sans font-semibold">Absolute Heat Limit</td>
-                      {comparedCropObjects.map((c) => (
-                        <td key={c.crop.id} className="py-2.5 px-3 text-[#E09F3E]">
-                          {c.crop.temperatureToleranceLimits.absoluteMax}°C ({c.crop.heatSensitivity} sensitivity)
-                        </td>
-                      ))}
-                    </tr>
-                    <tr>
-                      <td className="py-2.5 pr-3 text-[#9FA37C] font-sans font-semibold">Frost Tolerance</td>
-                      {comparedCropObjects.map((c) => (
-                        <td key={c.crop.id} className="py-2.5 px-3">
-                          Down to {c.crop.temperatureToleranceLimits.absoluteMin}°C ({c.crop.frostSensitivity})
-                        </td>
-                      ))}
-                    </tr>
-                    <tr>
-                      <td className="py-2.5 pr-3 text-[#9FA37C] font-sans font-semibold">Seasonal Water Need</td>
-                      {comparedCropObjects.map((c) => (
-                        <td key={c.crop.id} className="py-2.5 px-3 text-[#48CAE4]">
-                          {c.crop.waterRequirements.seasonalNeedMm} mm ({c.crop.waterRequirements.category})
-                        </td>
-                      ))}
-                    </tr>
-                    <tr>
-                      <td className="py-2.5 pr-3 text-[#9FA37C] font-sans font-semibold">Planting Window</td>
-                      {comparedCropObjects.map((c) => (
-                        <td key={c.crop.id} className="py-2.5 px-3 text-[#9A7E3B]">
-                          {c.crop.suitablePlantingWindows.map((w) => w.seasonName).join(" or ")}
-                        </td>
-                      ))}
-                    </tr>
-                    <tr>
-                      <td className="py-2.5 pr-3 text-[#9FA37C] font-sans font-semibold">Primary Risk in Green Valley</td>
-                      {comparedCropObjects.map((c) => (
-                        <td key={c.crop.id} className="py-2.5 px-3 text-red-300 font-sans text-[11px]">
-                          {c.primaryRiskFactors[0]}
-                        </td>
-                      ))}
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            )}
+          {comparedCropObjects.length === 0 ? (
+            <p className="text-xs text-muted-foreground py-8 text-center">
+              No crops selected. Click &quot;+ Compare&quot; on any crop card to add it to the comparison view.
+            </p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow className="border-border bg-background/60">
+                  <TableHead className="font-bold text-foreground">Attribute</TableHead>
+                  {comparedCropObjects.map((c) => (
+                    <TableHead key={c.crop.id} className="font-bold text-foreground">
+                      {c.crop.name}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              </TableHeader>
+              <TableBody className="font-mono text-xs">
+                <TableRow className="border-border">
+                  <TableCell className="text-muted-foreground font-sans font-semibold">Classification</TableCell>
+                  {comparedCropObjects.map((c) => (
+                    <TableCell key={c.crop.id}>
+                      <span className="text-foreground font-bold">{c.classification}</span>
+                    </TableCell>
+                  ))}
+                </TableRow>
+                <TableRow className="border-border">
+                  <TableCell className="text-muted-foreground font-sans font-semibold">Seasonal Category</TableCell>
+                  {comparedCropObjects.map((c) => (
+                    <TableCell key={c.crop.id} className="capitalize">
+                      {c.crop.category.replace("_", " ")}
+                    </TableCell>
+                  ))}
+                </TableRow>
+                <TableRow className="border-border">
+                  <TableCell className="text-muted-foreground font-sans font-semibold">Optimal Temperature</TableCell>
+                  {comparedCropObjects.map((c) => (
+                    <TableCell key={c.crop.id} className="text-[#9A7E3B] font-bold">
+                      {c.crop.suitableTempRange.optMin}°C – {c.crop.suitableTempRange.optMax}°C
+                    </TableCell>
+                  ))}
+                </TableRow>
+                <TableRow className="border-border">
+                  <TableCell className="text-muted-foreground font-sans font-semibold">Absolute Heat Limit</TableCell>
+                  {comparedCropObjects.map((c) => (
+                    <TableCell key={c.crop.id} className="text-primary">
+                      {c.crop.temperatureToleranceLimits.absoluteMax}°C ({c.crop.heatSensitivity} sensitivity)
+                    </TableCell>
+                  ))}
+                </TableRow>
+                <TableRow className="border-border">
+                  <TableCell className="text-muted-foreground font-sans font-semibold">Frost Tolerance</TableCell>
+                  {comparedCropObjects.map((c) => (
+                    <TableCell key={c.crop.id}>
+                      Down to {c.crop.temperatureToleranceLimits.absoluteMin}°C ({c.crop.frostSensitivity})
+                    </TableCell>
+                  ))}
+                </TableRow>
+                <TableRow className="border-border">
+                  <TableCell className="text-muted-foreground font-sans font-semibold">Seasonal Water Need</TableCell>
+                  {comparedCropObjects.map((c) => (
+                    <TableCell key={c.crop.id} className="text-sky-400">
+                      {c.crop.waterRequirements.seasonalNeedMm} mm ({c.crop.waterRequirements.category})
+                    </TableCell>
+                  ))}
+                </TableRow>
+                <TableRow className="border-border">
+                  <TableCell className="text-muted-foreground font-sans font-semibold">Planting Window</TableCell>
+                  {comparedCropObjects.map((c) => (
+                    <TableCell key={c.crop.id} className="text-primary">
+                      {c.crop.suitablePlantingWindows.map((w) => w.seasonName).join(" or ")}
+                    </TableCell>
+                  ))}
+                </TableRow>
+                <TableRow className="border-border">
+                  <TableCell className="text-muted-foreground font-sans font-semibold">Primary Risk in Green Valley</TableCell>
+                  {comparedCropObjects.map((c) => (
+                    <TableCell key={c.crop.id} className="text-destructive font-sans text-[11px]">
+                      {c.primaryRiskFactors[0]}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </TableBody>
+            </Table>
+          )}
 
-            <div className="pt-2 flex justify-end">
-              <button
-                onClick={() => setShowComparisonModal(false)}
-                className="rounded-lg bg-[#9A7E3B] px-4 py-1.5 text-xs font-bold text-[#28301C] transition hover:bg-[#D2CF9A]"
-              >
-                Close Comparison
-              </button>
-            </div>
+          <div className="pt-2 flex justify-end">
+            <Button
+              size="sm"
+              onClick={() => setShowComparisonModal(false)}
+            >
+              Close Comparison
+            </Button>
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

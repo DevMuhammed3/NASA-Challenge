@@ -4,67 +4,21 @@ import {
   FarmFinancialResults,
   FinancialScenario,
 } from "@/lib/types/economics";
-import { isGeminiAvailable, isOllamaAvailable } from "./gemini-advisor";
+import {
+  callOllama,
+  isGeminiAvailable,
+  isOllamaAvailable,
+} from "./gemini-advisor";
 
 const GEMINI_MODEL = process.env.AI_MODEL || "gemini-2.5-flash";
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "llama3.3";
 
-async function callOllama(prompt: string): Promise<string> {
-  const ollamaKey = process.env.OLLAMA_API_KEY;
-  const baseUrl = (process.env.OLLAMA_BASE_URL || "https://api.ollama.com").replace(
-    /\/$/,
-    ""
-  );
-
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 25000);
-
-  try {
-    const url = `${baseUrl}/api/chat`;
-    const res = await fetch(url, {
-      method: "POST",
-      signal: controller.signal,
-      headers: {
-        "Content-Type": "application/json",
-        ...(ollamaKey ? { Authorization: `Bearer ${ollamaKey}` } : {}),
-      },
-      body: JSON.stringify({
-        model: OLLAMA_MODEL,
-        messages: [{ role: "user", content: prompt }],
-        stream: false,
-      }),
-    });
-
-    if (res.ok) {
-      const json = await res.json();
-      if (json.message?.content) return json.message.content;
-    }
-
-    const v1Url = `${baseUrl}/v1/chat/completions`;
-    const v1Res = await fetch(v1Url, {
-      method: "POST",
-      signal: controller.signal,
-      headers: {
-        "Content-Type": "application/json",
-        ...(ollamaKey ? { Authorization: `Bearer ${ollamaKey}` } : {}),
-      },
-      body: JSON.stringify({
-        model: OLLAMA_MODEL,
-        messages: [{ role: "user", content: prompt }],
-      }),
-    });
-
-    if (!v1Res.ok) {
-      const err = await v1Res.text().catch(() => "");
-      throw new Error(`Ollama HTTP ${v1Res.status}: ${err.slice(0, 150)}`);
-    }
-
-    const v1Json = await v1Res.json();
-    return v1Json.choices?.[0]?.message?.content || "";
-  } finally {
-    clearTimeout(timeoutId);
-  }
-}
+// In-memory cache for economic advisor reports
+const economicAnalysisCache = new Map<
+  string,
+  { data: EconomicAdvisorReport; expiresAt: number }
+>();
+const CACHE_TTL_MS = 15 * 60 * 1000;
 
 export async function generateFarmEconomicAnalysis(params: {
   cropName: string;
@@ -73,17 +27,22 @@ export async function generateFarmEconomicAnalysis(params: {
   scenarios: Record<string, FinancialScenario>;
   comparisonTop5: CropEconomicComparisonItem[];
 }): Promise<EconomicAdvisorReport> {
-  const geminiKey = process.env.GEMINI_API_KEY;
-  const ollamaKey = process.env.OLLAMA_API_KEY;
+  const geminiKey = process.env.GEMINI_API_KEY?.trim();
+  const ollamaConfigured = isOllamaAvailable();
   const preferredProvider = (process.env.AI_PROVIDER || "google").toLowerCase();
 
-  if (!geminiKey && !ollamaKey) {
-    throw new Error(
-      "Neither GEMINI_API_KEY nor OLLAMA_API_KEY is configured on the server. AI Economic Advisor is disabled."
-    );
+  const { cropName, acreage, financialResults: fin, scenarios, comparisonTop5 } = params;
+
+  // 1. Instant Cache Check (<1ms)
+  const cacheKey = `${cropName}_${acreage}_${preferredProvider}`;
+  const cached = economicAnalysisCache.get(cacheKey);
+  if (cached && Date.now() < cached.expiresAt) {
+    return cached.data;
   }
 
-  const { cropName, acreage, financialResults: fin, scenarios, comparisonTop5 } = params;
+  if (!geminiKey && !ollamaConfigured) {
+    return generateDeterministicEconomicFallback(params);
+  }
 
   const topCropsSummary = comparisonTop5
     .map(
@@ -142,7 +101,7 @@ Return your response formatted cleanly with these 5 exact section headers:
   let activeModel = GEMINI_MODEL;
 
   try {
-    if (preferredProvider === "ollama" && ollamaKey) {
+    if (preferredProvider === "ollama" && ollamaConfigured) {
       try {
         responseText = await callOllama(prompt);
         activeProvider = "Ollama";
@@ -153,7 +112,7 @@ Return your response formatted cleanly with these 5 exact section headers:
           activeProvider = "Google Gemini";
           activeModel = GEMINI_MODEL;
         } else {
-          throw new Error("Ollama call failed and Gemini is unavailable.");
+          return generateDeterministicEconomicFallback(params);
         }
       }
     } else if (geminiKey) {
@@ -162,12 +121,16 @@ Return your response formatted cleanly with these 5 exact section headers:
         activeProvider = "Google Gemini";
         activeModel = GEMINI_MODEL;
       } catch {
-        if (ollamaKey) {
-          responseText = await callOllama(prompt);
-          activeProvider = "Ollama";
-          activeModel = OLLAMA_MODEL;
+        if (ollamaConfigured) {
+          try {
+            responseText = await callOllama(prompt);
+            activeProvider = "Ollama";
+            activeModel = OLLAMA_MODEL;
+          } catch {
+            return generateDeterministicEconomicFallback(params);
+          }
         } else {
-          throw new Error("Gemini call failed and Ollama is unavailable.");
+          return generateDeterministicEconomicFallback(params);
         }
       }
     }
@@ -175,7 +138,7 @@ Return your response formatted cleanly with these 5 exact section headers:
     // Parse structured sections
     const sections = parseSections(responseText);
 
-    return {
+    const report: EconomicAdvisorReport = {
       status: "Completed",
       provider: activeProvider,
       model: activeModel,
@@ -183,9 +146,21 @@ Return your response formatted cleanly with these 5 exact section headers:
       groundingNotice:
         "All numeric margins, yields, break-evens, and enterprise budgets were generated by GAIA's deterministic mathematical engine based on USDA AMS Report 2403 and University of Arizona Cooperative Extension benchmarks. AI synthesis is strictly explanatory.",
     };
+
+    economicAnalysisCache.set(cacheKey, {
+      data: report,
+      expiresAt: Date.now() + CACHE_TTL_MS,
+    });
+
+    return report;
   } catch (err) {
     console.warn("External LLM API unavailable or rate-limited; generating deterministic economic synthesis:", err);
-    return generateDeterministicEconomicFallback(params);
+    const fallback = generateDeterministicEconomicFallback(params);
+    economicAnalysisCache.set(cacheKey, {
+      data: fallback,
+      expiresAt: Date.now() + CACHE_TTL_MS,
+    });
+    return fallback;
   }
 }
 
@@ -232,7 +207,7 @@ async function callGemini(prompt: string, apiKey: string): Promise<string> {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30000);
+  const timeoutId = setTimeout(() => controller.abort(), 9000);
 
   try {
     const res = await fetch(url, {
@@ -244,6 +219,9 @@ async function callGemini(prompt: string, apiKey: string): Promise<string> {
         generationConfig: {
           temperature: 0.15, // Low temperature for factual precision
           maxOutputTokens: 2500,
+          thinkingConfig: {
+            thinkingBudget: 0,
+          },
         },
       }),
     });

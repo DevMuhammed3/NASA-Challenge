@@ -18,6 +18,16 @@ import type {
   EnvironmentalDataResponse,
   AiAdvisorAnalysis,
 } from "@/lib/types/environmental";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 interface AiAdvisorSectionProps {
   telemetry: EnvironmentalDataResponse | null;
@@ -49,12 +59,14 @@ export function AiAdvisorSection({
         setAnalysis(data.analysis);
       } else {
         setErrorMsg(
-          data.error || "Failed to generate AI analysis from telemetry."
+          data.error || "Failed to generate AI analysis from telemetry.",
         );
       }
     } catch (err) {
       setErrorMsg(
-        err instanceof Error ? err.message : "Error contacting AI Advisor service"
+        err instanceof Error
+          ? err.message
+          : "Error contacting AI Advisor service",
       );
     } finally {
       setIsLoading(false);
@@ -62,190 +74,222 @@ export function AiAdvisorSection({
   };
 
   return (
-    <div className="space-y-4 rounded-2xl border border-[#435133] bg-[#323D25]/90 p-5 shadow-xl backdrop-blur-sm">
+    <Card className="border-border bg-card/90 p-5 shadow-xl backdrop-blur-xs flex flex-col gap-4">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#435133]/60 pb-3">
+      <CardHeader className="p-0 pb-3 flex flex-wrap items-center justify-between gap-3 border-b border-border">
         <div>
           <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-[#9A7E3B]" />
-            <h3 className="text-base font-bold text-[#D2CF9A]">
+            <Sparkles className="size-4 text-primary" />
+            <CardTitle className="text-base font-bold text-foreground">
               AI Environmental Advisor (Google Gemini 2.5 Flash)
-            </h3>
+            </CardTitle>
           </div>
-          <p className="mt-0.5 text-xs text-[#9FA37C]">
-            Synthesizes 5-year NASA POWER climatology into agricultural patterns, opportunities, risks, and missing laboratory parameters.
-          </p>
+          <CardDescription className="mt-0.5 text-xs text-muted-foreground">
+            Synthesizes 5-year NASA POWER climatology into agricultural
+            patterns, opportunities, risks, and missing laboratory parameters.
+          </CardDescription>
         </div>
 
         <div className="flex items-center gap-2">
           {geminiAvailable ? (
-            <button
+            <Button
+              size="sm"
               onClick={handleAnalyzeData}
               disabled={isLoading || !telemetry}
-              className="inline-flex items-center gap-2 rounded-xl bg-[#9A7E3B] px-4 py-2 text-xs font-bold text-[#28301C] transition hover:bg-[#D2CF9A] disabled:opacity-50 shadow-md"
+              className="bg-primary text-primary-foreground font-bold hover:bg-primary/90 shadow-md"
             >
-              <Sparkles className={`h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`} />
+              <Sparkles
+                data-icon="inline-start"
+                className={`size-3.5 ${isLoading ? "animate-spin" : ""}`}
+              />
               {isLoading ? "Synthesizing Telemetry..." : "Analyze Data"}
-            </button>
+            </Button>
           ) : (
-            <div className="rounded-lg border border-[#435133] bg-[#28301C] px-3 py-1.5 text-xs text-[#9FA37C]">
-              GEMINI_API_KEY Missing on Server
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Telemetry Input Transparency Summary */}
-      {telemetry && (
-        <div className="rounded-xl border border-[#435133] bg-[#28301C]/80 p-3.5 text-xs font-mono">
-          <div className="flex items-center justify-between text-[#9FA37C] border-b border-[#435133]/50 pb-2">
-            <span className="font-semibold text-[#D2CF9A]">Data Fed to AI Advisor:</span>
-            <span>{telemetry.sourceName}</span>
-          </div>
-          <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] text-[#D2CF9A]">
-            <div>
-              <span className="text-[#9FA37C]">Location:</span> {telemetry.location.name}
-            </div>
-            <div>
-              <span className="text-[#9FA37C]">Coords:</span> {telemetry.location.latitude}°N, {telemetry.location.longitude}°W
-            </div>
-            <div>
-              <span className="text-[#9FA37C]">Range:</span> {telemetry.summaryStats.period.start} to {telemetry.summaryStats.period.end}
-            </div>
-            <div>
-              <span className="text-[#9FA37C]">Days Ingested:</span> {telemetry.summaryStats.period.totalDays} (0 missing)
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Error Banner */}
-      {errorMsg && (
-        <div className="rounded-xl border border-red-700/50 bg-red-900/20 p-3.5 text-xs text-red-200 flex items-start gap-2.5">
-          <AlertTriangle className="h-4 w-4 shrink-0 text-red-400 mt-0.5" />
-          <div>
-            <strong className="font-semibold">AI Analysis Notice:</strong> {errorMsg}
-          </div>
-        </div>
-      )}
-
-      {/* Empty State before Analyze Data clicked */}
-      {!analysis && !isLoading && !errorMsg && (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[#435133] py-12 px-4 text-center">
-          <Sparkles className="h-8 w-8 text-[#9A7E3B]/60 mb-2" />
-          <h4 className="text-sm font-semibold text-[#D2CF9A]">
-            Ready to Analyze Real Environmental Data
-          </h4>
-          <p className="mt-1 max-w-md text-xs text-[#9FA37C]">
-            Click &quot;Analyze Data&quot; to invoke Google Gemini 2.5 Flash on the 5-year NASA POWER daily records for Green Valley, AZ.
-          </p>
-          {geminiAvailable && (
-            <button
-              onClick={handleAnalyzeData}
-              disabled={!telemetry}
-              className="mt-3.5 inline-flex items-center gap-1.5 rounded-lg bg-[#9A7E3B] px-3.5 py-1.5 text-xs font-bold text-[#28301C] transition hover:bg-[#D2CF9A]"
+            <Badge
+              variant="outline"
+              className="border-border bg-background text-muted-foreground text-xs py-1"
             >
-              Analyze Data
-            </button>
+              GEMINI_API_KEY Missing on Server
+            </Badge>
           )}
         </div>
-      )}
+      </CardHeader>
 
-      {/* Loading Skeleton */}
-      {isLoading && (
-        <div className="space-y-3 rounded-xl border border-[#435133] bg-[#28301C]/60 p-6 text-center">
-          <RefreshCw className="h-7 w-7 text-[#9A7E3B] animate-spin mx-auto mb-2" />
-          <div className="text-xs font-semibold text-[#D2CF9A]">
-            Consulting Google Gemini 2.5 Flash...
-          </div>
-          <p className="text-[11px] text-[#9FA37C] max-w-sm mx-auto">
-            Evaluating historical temperature records, precipitation accumulation, humidity levels, and soil moisture fractions against agronomic parameters.
-          </p>
-        </div>
-      )}
-
-      {/* Render 6 Structured AI Sections */}
-      {analysis && !isLoading && (
-        <div className="space-y-4 pt-1">
-          {/* Ground truth disclaimer */}
-          <div className="flex items-start gap-2.5 rounded-lg border border-[#9A7E3B]/30 bg-[#9A7E3B]/10 p-3 text-xs text-[#D2CF9A]">
-            <Info className="h-4 w-4 shrink-0 text-[#9A7E3B] mt-0.5" />
-            <div>
-              <strong>Advisory Ground Truth Notice:</strong> {analysis.groundTruthNotice}
+      <CardContent className="p-0 flex flex-col gap-4">
+        {/* Telemetry Input Transparency Summary */}
+        {telemetry && (
+          <div className="rounded-xl border border-border bg-background/80 p-3.5 text-xs font-mono">
+            <div className="flex items-center justify-between text-muted-foreground border-b border-border pb-2">
+              <span className="font-semibold text-foreground">
+                Data Fed to AI Advisor:
+              </span>
+              <span>{telemetry.sourceName}</span>
             </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Section 1: Environmental Summary */}
-            <div className="rounded-xl border border-[#435133] bg-[#28301C] p-4 space-y-2">
-              <div className="flex items-center gap-2 text-[#D2CF9A] border-b border-[#435133]/50 pb-2">
-                <Info className="h-4 w-4 text-[#9A7E3B]" />
-                <h4 className="text-sm font-bold">1. Environmental Conditions Summary</h4>
+            <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] text-foreground">
+              <div>
+                <span className="text-muted-foreground">Location:</span>{" "}
+                {telemetry.location.name}
               </div>
-              <div className="text-xs text-[#D2CF9A]/90 leading-relaxed whitespace-pre-line">
-                {analysis.sections.environmentalSummary}
+              <div>
+                <span className="text-muted-foreground">Coords:</span>{" "}
+                {telemetry.location.latitude}°N, {telemetry.location.longitude}
+                °W
               </div>
-            </div>
-
-            {/* Section 2: Five-Year Climate Patterns */}
-            <div className="rounded-xl border border-[#435133] bg-[#28301C] p-4 space-y-2">
-              <div className="flex items-center gap-2 text-[#D2CF9A] border-b border-[#435133]/50 pb-2">
-                <TrendingUp className="h-4 w-4 text-[#52B788]" />
-                <h4 className="text-sm font-bold">2. Five-Year Climate Patterns & Trends</h4>
+              <div>
+                <span className="text-muted-foreground">Range:</span>{" "}
+                {telemetry.summaryStats.period.start} to{" "}
+                {telemetry.summaryStats.period.end}
               </div>
-              <div className="text-xs text-[#D2CF9A]/90 leading-relaxed whitespace-pre-line">
-                {analysis.sections.climatePatterns}
-              </div>
-            </div>
-
-            {/* Section 3: Potential Agricultural Opportunities */}
-            <div className="rounded-xl border border-[#435133] bg-[#28301C] p-4 space-y-2">
-              <div className="flex items-center gap-2 text-[#D2CF9A] border-b border-[#435133]/50 pb-2">
-                <Sprout className="h-4 w-4 text-[#74C69D]" />
-                <h4 className="text-sm font-bold">3. Potential Agricultural Opportunities</h4>
-              </div>
-              <div className="text-xs text-[#D2CF9A]/90 leading-relaxed whitespace-pre-line">
-                {analysis.sections.agriculturalOpportunities}
-              </div>
-            </div>
-
-            {/* Section 4: Environmental & Climatic Risks */}
-            <div className="rounded-xl border border-[#435133] bg-[#28301C] p-4 space-y-2">
-              <div className="flex items-center gap-2 text-[#D2CF9A] border-b border-[#435133]/50 pb-2">
-                <ShieldAlert className="h-4 w-4 text-[#E09F3E]" />
-                <h4 className="text-sm font-bold">4. Environmental & Climatic Risks</h4>
-              </div>
-              <div className="text-xs text-[#D2CF9A]/90 leading-relaxed whitespace-pre-line">
-                {analysis.sections.environmentalRisks}
+              <div>
+                <span className="text-muted-foreground">Days Ingested:</span>{" "}
+                {telemetry.summaryStats.period.totalDays} (0 missing)
               </div>
             </div>
           </div>
+        )}
 
-          {/* Section 5: Missing Ground-Truth Information (Highlighted Full-Width) */}
-          <div className="rounded-xl border border-[#9A7E3B]/50 bg-[#323D25] p-4 space-y-2">
-            <div className="flex items-center gap-2 text-[#D2CF9A] border-b border-[#435133]/60 pb-2">
-              <FileQuestion className="h-4 w-4 text-[#9A7E3B]" />
-              <h4 className="text-sm font-bold">
-                5. Missing Ground-Truth Information (Must Test in Laboratory)
-              </h4>
-            </div>
-            <div className="text-xs text-[#D2CF9A]/95 leading-relaxed whitespace-pre-line">
-              {analysis.sections.missingInformation}
-            </div>
-          </div>
+        {/* Error Banner */}
+        {errorMsg && (
+          <Alert variant="destructive">
+            <AlertTriangle className="size-4" />
+            <AlertTitle>AI Analysis Notice</AlertTitle>
+            <AlertDescription>{errorMsg}</AlertDescription>
+          </Alert>
+        )}
 
-          {/* Section 6: Recommended Next Steps (Actionable Box) */}
-          <div className="rounded-xl border border-[#52B788]/40 bg-[#28301C] p-4 space-y-2">
-            <div className="flex items-center gap-2 text-[#D2CF9A] border-b border-[#435133]/60 pb-2">
-              <ArrowRight className="h-4 w-4 text-[#52B788]" />
-              <h4 className="text-sm font-bold">6. Recommended Practical Next Steps</h4>
-            </div>
-            <div className="text-xs text-[#D2CF9A]/95 leading-relaxed whitespace-pre-line">
-              {analysis.sections.recommendedNextSteps}
-            </div>
+        {/* Empty State before Analyze Data clicked */}
+        {!analysis && !isLoading && !errorMsg && (
+          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-12 px-4 text-center">
+            <Sparkles className="size-8 text-primary/60 mb-2" />
+            <h4 className="text-sm font-semibold text-foreground">
+              Ready to Analyze Real Environmental Data
+            </h4>
+            <p className="mt-1 max-w-md text-xs text-muted-foreground">
+              Click &quot;Analyze Data&quot; to invoke Google Gemini 2.5 Flash
+              on the 5-year NASA POWER daily records for Green Valley, AZ.
+            </p>
+            {geminiAvailable && (
+              <Button
+                size="sm"
+                onClick={handleAnalyzeData}
+                disabled={!telemetry}
+                className="mt-3.5 bg-primary text-primary-foreground font-bold hover:bg-primary/90"
+              >
+                Analyze Data
+              </Button>
+            )}
           </div>
-        </div>
-      )}
-    </div>
+        )}
+
+        {/* Loading Skeleton */}
+        {isLoading && (
+          <div className="flex flex-col gap-2 rounded-xl border border-border bg-background/60 p-6 text-center">
+            <RefreshCw className="size-7 text-primary animate-spin mx-auto mb-2" />
+            <div className="text-xs font-semibold text-foreground">
+              Consulting Google Gemini 2.5 Flash...
+            </div>
+            <p className="text-[11px] text-muted-foreground max-w-sm mx-auto">
+              Evaluating historical temperature records, precipitation
+              accumulation, humidity levels, and soil moisture fractions against
+              agronomic parameters.
+            </p>
+          </div>
+        )}
+
+        {/* Render 6 Structured AI Sections */}
+        {analysis && !isLoading && (
+          <div className="flex flex-col gap-4 pt-1">
+            {/* Ground truth disclaimer */}
+            <Alert className="border-primary/40 bg-primary/10 text-foreground">
+              <Info className="size-4 text-primary shrink-0" />
+              <AlertDescription className="text-xs">
+                <strong>Advisory Ground Truth Notice:</strong>{" "}
+                {analysis.groundTruthNotice}
+              </AlertDescription>
+            </Alert>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Section 1: Environmental Summary */}
+              <Card className="border-border bg-background/50 p-4 shadow-none flex flex-col gap-2">
+                <div className="flex items-center gap-2 text-foreground border-b border-border pb-2">
+                  <Info className="size-4 text-primary" />
+                  <h4 className="text-sm font-bold">
+                    1. Environmental Conditions Summary
+                  </h4>
+                </div>
+                <div className="text-xs text-foreground/90 leading-relaxed whitespace-pre-line">
+                  {analysis.sections.environmentalSummary}
+                </div>
+              </Card>
+
+              {/* Section 2: Five-Year Climate Patterns */}
+              <Card className="border-border bg-background/50 p-4 shadow-none flex flex-col gap-2">
+                <div className="flex items-center gap-2 text-foreground border-b border-border pb-2">
+                  <TrendingUp className="size-4 text-[#41644A]" />
+                  <h4 className="text-sm font-bold">
+                    2. Five-Year Climate Patterns &amp; Trends
+                  </h4>
+                </div>
+                <div className="text-xs text-foreground/90 leading-relaxed whitespace-pre-line">
+                  {analysis.sections.climatePatterns}
+                </div>
+              </Card>
+
+              {/* Section 3: Potential Agricultural Opportunities */}
+              <Card className="border-border bg-background/50 p-4 shadow-none flex flex-col gap-2">
+                <div className="flex items-center gap-2 text-foreground border-b border-border pb-2">
+                  <Sprout className="size-4 text-[#41644A]" />
+                  <h4 className="text-sm font-bold">
+                    3. Potential Agricultural Opportunities
+                  </h4>
+                </div>
+                <div className="text-xs text-foreground/90 leading-relaxed whitespace-pre-line">
+                  {analysis.sections.agriculturalOpportunities}
+                </div>
+              </Card>
+
+              {/* Section 4: Environmental & Climatic Risks */}
+              <Card className="border-border bg-background/50 p-4 shadow-none flex flex-col gap-2">
+                <div className="flex items-center gap-2 text-foreground border-b border-border pb-2">
+                  <ShieldAlert className="size-4 text-primary" />
+                  <h4 className="text-sm font-bold">
+                    4. Environmental &amp; Climatic Risks
+                  </h4>
+                </div>
+                <div className="text-xs text-foreground/90 leading-relaxed whitespace-pre-line">
+                  {analysis.sections.environmentalRisks}
+                </div>
+              </Card>
+            </div>
+
+            {/* Section 5: Missing Ground-Truth Information (Highlighted Full-Width) */}
+            <Card className="border-primary/50 bg-card p-4 shadow-none flex flex-col gap-2">
+              <div className="flex items-center gap-2 text-foreground border-b border-border pb-2">
+                <FileQuestion className="size-4 text-primary" />
+                <h4 className="text-sm font-bold">
+                  5. Missing Ground-Truth Information (Must Test in Laboratory)
+                </h4>
+              </div>
+              <div className="text-xs text-foreground/95 leading-relaxed whitespace-pre-line">
+                {analysis.sections.missingInformation}
+              </div>
+            </Card>
+
+            {/* Section 6: Recommended Next Steps (Actionable Box) */}
+            <Card className="border-[#41644A]/40 bg-background/60 p-4 shadow-none flex flex-col gap-2">
+              <div className="flex items-center gap-2 text-foreground border-b border-border pb-2">
+                <ArrowRight className="size-4 text-[#41644A]" />
+                <h4 className="text-sm font-bold">
+                  6. Recommended Practical Next Steps
+                </h4>
+              </div>
+              <div className="text-xs text-foreground/95 leading-relaxed whitespace-pre-line">
+                {analysis.sections.recommendedNextSteps}
+              </div>
+            </Card>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

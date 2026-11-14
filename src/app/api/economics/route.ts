@@ -60,26 +60,37 @@ export async function GET(request: NextRequest) {
 
     // Determine default or overridden yield
     const yieldParam = parseFloat(searchParams.get("expectedYieldPerAcreLbs") || "");
-    let expectedYield = !isNaN(yieldParam) && yieldParam > 0 ? yieldParam : 0;
+    const isUserYield = !isNaN(yieldParam) && yieldParam > 0;
+    let expectedYield = isUserYield ? yieldParam : 0;
+    let yieldSource = isUserYield ? "Farmer Input Override" : "";
+
     if (!expectedYield) {
       if (nassStat?.yieldPerAcre) {
         expectedYield = nassStat.yieldUnit.includes("CWT")
           ? nassStat.yieldPerAcre * 100
           : nassStat.yieldPerAcre;
+        yieldSource = nassStat.dataSource;
       } else {
         const compItem = cropComparison.find((c) => c.cropId === cropId);
-        expectedYield = compItem?.yieldPerAcreLbs || 18000;
+        expectedYield = compItem?.yieldPerAcreLbs || 0;
+        yieldSource = "UArizona Cooperative Extension Baseline Budget";
       }
     }
 
     // Determine default or overridden price
     const priceParam = parseFloat(searchParams.get("sellingPricePerLb") || "");
-    const sellingPrice =
-      !isNaN(priceParam) && priceParam > 0
-        ? priceParam
-        : matchedPrice
-        ? matchedPrice.pricePerLb
-        : 1.25;
+    const isUserPrice = !isNaN(priceParam) && priceParam > 0;
+    const sellingPrice = isUserPrice
+      ? priceParam
+      : matchedPrice
+      ? matchedPrice.pricePerLb
+      : 0;
+
+    const priceSource = isUserPrice
+      ? "Farmer Input Override"
+      : matchedPrice
+      ? `${matchedPrice.marketName} (${matchedPrice.grade})`
+      : "Unavailable (Awaiting farmer selling price input)";
 
     // Determine marketable percent
     const mktParam = parseFloat(searchParams.get("marketablePercent") || "");
@@ -92,10 +103,10 @@ export async function GET(request: NextRequest) {
       marketablePercent,
       sellingPricePerLb: sellingPrice,
       sellingPriceUnitDescription: "$/lb",
-      priceCategory: "Shipping Point (Regional Wholesale Reference)",
-      priceSource: matchedPrice
-        ? `${matchedPrice.marketName} (${matchedPrice.grade})`
-        : "Regional Baseline Estimate",
+      priceCategory: isUserPrice
+        ? "Farm-Gate Price (Direct)"
+        : "Shipping Point (Regional Wholesale Reference)",
+      priceSource,
     };
 
     const selectedCropFinancials = calculateFarmFinancials(financialInputs, selectedBudget);

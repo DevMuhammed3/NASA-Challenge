@@ -19,6 +19,22 @@ import type {
   DailyObservation,
   NasaPowerParameterMeta,
 } from "@/lib/types/environmental";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "@/components/ui/table";
 
 interface HistoricalDataSectionProps {
   monthlyAggregates: MonthlyAggregate[];
@@ -27,7 +43,11 @@ interface HistoricalDataSectionProps {
   parameterMetadata: Record<string, NasaPowerParameterMeta>;
 }
 
-type ChartMetric = "temperature" | "precipitation" | "humidity" | "soil_moisture";
+type ChartMetric =
+  | "temperature"
+  | "precipitation"
+  | "humidity"
+  | "soil_moisture";
 
 export function HistoricalDataSection({
   monthlyAggregates,
@@ -45,12 +65,12 @@ export function HistoricalDataSection({
 
   // Filtered daily observations
   const filteredDaily = recentObservations.filter((d) =>
-    inspectorFilter ? d.date.includes(inspectorFilter) : true
+    inspectorFilter ? d.date.includes(inspectorFilter) : true,
   );
   const totalPages = Math.ceil(filteredDaily.length / pageSize) || 1;
   const pageObservations = filteredDaily.slice(
     inspectorPage * pageSize,
-    (inspectorPage + 1) * pageSize
+    (inspectorPage + 1) * pageSize,
   );
 
   // SVG Chart Dimensions
@@ -82,7 +102,9 @@ export function HistoricalDataSection({
       const minY = Math.floor(Math.min(...temps) - 2);
       const maxY = Math.ceil(Math.max(...temps) + 2);
       const yScale = (val: number) =>
-        padding.top + innerHeight - ((val - minY) / (maxY - minY)) * innerHeight;
+        padding.top +
+        innerHeight -
+        ((val - minY) / (maxY - minY)) * innerHeight;
 
       const meanPoints = monthlyAggregates.map((m, i) => ({
         x: padding.left + i * xStep,
@@ -100,7 +122,10 @@ export function HistoricalDataSection({
       const makePath = (pts: { x: number; y: number | null }[]) =>
         pts
           .filter((p): p is { x: number; y: number } => p.y !== null)
-          .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`)
+          .map(
+            (p, i) =>
+              `${i === 0 ? "M" : "L"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`,
+          )
           .join(" ");
 
       return (
@@ -143,9 +168,24 @@ export function HistoricalDataSection({
           />
 
           {/* Lines */}
-          <path d={makePath(maxPoints)} fill="none" stroke="#E09F3E" strokeWidth="1.5" />
-          <path d={makePath(minPoints)} fill="none" stroke="#48CAE4" strokeWidth="1.5" />
-          <path d={makePath(meanPoints)} fill="none" stroke="#D2CF9A" strokeWidth="2.5" />
+          <path
+            d={makePath(maxPoints)}
+            fill="none"
+            stroke="#E09F3E"
+            strokeWidth="1.5"
+          />
+          <path
+            d={makePath(minPoints)}
+            fill="none"
+            stroke="#48CAE4"
+            strokeWidth="1.5"
+          />
+          <path
+            d={makePath(meanPoints)}
+            fill="none"
+            stroke="#D6C99A"
+            strokeWidth="2.5"
+          />
 
           {/* Month X Labels */}
           {monthlyAggregates.map((m, i) => {
@@ -172,7 +212,7 @@ export function HistoricalDataSection({
               width={xStep}
               height={innerHeight}
               fill="transparent"
-              className="cursor-pointer hover:fill-[#9A7E3B]/10"
+              className="cursor-pointer hover:fill-[#41644A]/10"
               onMouseEnter={() => setHoveredIndex(i)}
               onMouseLeave={() => setHoveredIndex(null)}
             />
@@ -185,7 +225,7 @@ export function HistoricalDataSection({
                 y1={padding.top}
                 x2={padding.left + hoveredIndex * xStep}
                 y2={chartHeight - padding.bottom}
-                stroke="#D2CF9A"
+                stroke="#D6C99A"
                 strokeWidth="1"
                 strokeDasharray="2 2"
               />
@@ -197,7 +237,7 @@ export function HistoricalDataSection({
 
     if (activeMetric === "precipitation") {
       const maxPrecip = Math.ceil(
-        Math.max(...monthlyAggregates.map((m) => m.precipSum), 10)
+        Math.max(...monthlyAggregates.map((m) => m.precipSum ?? 0), 10),
       );
       const yScale = (val: number) =>
         padding.top + innerHeight - (val / maxPrecip) * innerHeight;
@@ -232,7 +272,8 @@ export function HistoricalDataSection({
 
           {monthlyAggregates.map((m, i) => {
             const x = padding.left + i * xStep - barWidth / 2;
-            const y = yScale(m.precipSum);
+            const val = m.precipSum ?? 0;
+            const y = yScale(val);
             const h = padding.top + innerHeight - y;
             return (
               <rect
@@ -244,7 +285,7 @@ export function HistoricalDataSection({
                 fill="#48CAE4"
                 fillOpacity={hoveredIndex === i ? 0.9 : 0.65}
                 rx="2"
-                className="cursor-pointer transition-all hover:fill-[#52B788]"
+                className="cursor-pointer transition-all hover:fill-[#3C7A89]"
                 onMouseEnter={() => setHoveredIndex(i)}
                 onMouseLeave={() => setHoveredIndex(null)}
               />
@@ -270,7 +311,8 @@ export function HistoricalDataSection({
     }
 
     if (activeMetric === "humidity") {
-      const yScale = (val: number) => padding.top + innerHeight - (val / 100) * innerHeight;
+      const yScale = (val: number) =>
+        padding.top + innerHeight - (val / 100) * innerHeight;
 
       const rhPoints = monthlyAggregates.map((m, i) => ({
         x: padding.left + i * xStep,
@@ -280,7 +322,10 @@ export function HistoricalDataSection({
       const makePath = (pts: { x: number; y: number | null }[]) =>
         pts
           .filter((p): p is { x: number; y: number } => p.y !== null)
-          .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`)
+          .map(
+            (p, i) =>
+              `${i === 0 ? "M" : "L"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`,
+          )
           .join(" ");
 
       return (
@@ -314,10 +359,15 @@ export function HistoricalDataSection({
             d={`${makePath(rhPoints)} L ${chartWidth - padding.right} ${
               chartHeight - padding.bottom
             } L ${padding.left} ${chartHeight - padding.bottom} Z`}
-            fill="#52B788"
+            fill="#3C7A89"
             fillOpacity="0.15"
           />
-          <path d={makePath(rhPoints)} fill="none" stroke="#52B788" strokeWidth="2.5" />
+          <path
+            d={makePath(rhPoints)}
+            fill="none"
+            stroke="#3C7A89"
+            strokeWidth="2.5"
+          />
 
           {monthlyAggregates.map((m, i) => {
             if (i % 6 !== 0 && i !== n - 1) return null;
@@ -342,7 +392,7 @@ export function HistoricalDataSection({
               width={xStep}
               height={innerHeight}
               fill="transparent"
-              className="cursor-pointer hover:fill-[#52B788]/10"
+              className="cursor-pointer hover:fill-[#3C7A89]/10"
               onMouseEnter={() => setHoveredIndex(i)}
               onMouseLeave={() => setHoveredIndex(null)}
             />
@@ -352,7 +402,8 @@ export function HistoricalDataSection({
     }
 
     // Soil Moisture
-    const yScale = (val: number) => padding.top + innerHeight - val * innerHeight;
+    const yScale = (val: number) =>
+      padding.top + innerHeight - val * innerHeight;
 
     const topPoints = monthlyAggregates.map((m, i) => ({
       x: padding.left + i * xStep,
@@ -370,7 +421,10 @@ export function HistoricalDataSection({
     const makePath = (pts: { x: number; y: number | null }[]) =>
       pts
         .filter((p): p is { x: number; y: number } => p.y !== null)
-        .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`)
+        .map(
+          (p, i) =>
+            `${i === 0 ? "M" : "L"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`,
+        )
         .join(" ");
 
     return (
@@ -400,9 +454,24 @@ export function HistoricalDataSection({
           </g>
         ))}
 
-        <path d={makePath(topPoints)} fill="none" stroke="#48CAE4" strokeWidth="2" />
-        <path d={makePath(rootPoints)} fill="none" stroke="#52B788" strokeWidth="2.5" />
-        <path d={makePath(profPoints)} fill="none" stroke="#9A7E3B" strokeWidth="1.8" />
+        <path
+          d={makePath(topPoints)}
+          fill="none"
+          stroke="#48CAE4"
+          strokeWidth="2"
+        />
+        <path
+          d={makePath(rootPoints)}
+          fill="none"
+          stroke="#28301C"
+          strokeWidth="2.5"
+        />
+        <path
+          d={makePath(profPoints)}
+          fill="none"
+          stroke="#41644A"
+          strokeWidth="1.8"
+        />
 
         {monthlyAggregates.map((m, i) => {
           if (i % 6 !== 0 && i !== n - 1) return null;
@@ -427,7 +496,7 @@ export function HistoricalDataSection({
             width={xStep}
             height={innerHeight}
             fill="transparent"
-            className="cursor-pointer hover:fill-[#9A7E3B]/10"
+            className="cursor-pointer hover:fill-[#41644A]/10"
             onMouseEnter={() => setHoveredIndex(i)}
             onMouseLeave={() => setHoveredIndex(null)}
           />
@@ -442,253 +511,348 @@ export function HistoricalDataSection({
       : null;
 
   return (
-    <div className="space-y-4 rounded-2xl border border-[#435133] bg-[#323D25]/90 p-5 shadow-xl backdrop-blur-sm">
+    <Card className="border-border bg-card/90 p-5 shadow-xl backdrop-blur-xs flex flex-col gap-4">
       {/* Header & Controls */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#435133]/60 pb-3">
+      <CardHeader className="p-0 pb-3 flex flex-wrap items-center justify-between gap-3 border-b border-border">
         <div>
           <div className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-[#9A7E3B]" />
-            <h3 className="text-base font-bold text-[#D2CF9A]">
-              Historical Agroclimatology (5-Year Range: 2021-01-01 to 2025-12-31)
-            </h3>
+            <TrendingUp className="size-4 text-primary" />
+            <CardTitle className="text-base font-bold text-foreground">
+              Historical Agroclimatology (5-Year Range: 2021-01-01 to
+              2025-12-31)
+            </CardTitle>
           </div>
-          <p className="mt-0.5 text-xs text-[#9FA37C]">
-            Monthly aggregated from {totalObservationsCount.toLocaleString()} daily NASA POWER observations. Precipitation is summed monthly; temperature, humidity, and soil moisture are averaged.
-          </p>
+          <CardDescription className="mt-0.5 text-xs text-muted-foreground">
+            Monthly aggregated from {totalObservationsCount.toLocaleString()}{" "}
+            daily NASA POWER observations. Precipitation is summed monthly;
+            temperature, humidity, and soil moisture are averaged.
+          </CardDescription>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
           {/* Chart metric selector buttons */}
-          <div className="flex rounded-lg border border-[#435133] bg-[#28301C] p-1 text-xs">
-            <button
+          <div className="flex items-center gap-1 rounded-lg border border-border bg-background p-1 text-xs">
+            <Button
+              variant={activeMetric === "temperature" ? "default" : "ghost"}
+              size="xs"
               onClick={() => setActiveMetric("temperature")}
-              className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 transition ${
-                activeMetric === "temperature"
-                  ? "bg-[#9A7E3B] text-[#28301C] font-semibold"
-                  : "text-[#D2CF9A] hover:text-[#9A7E3B]"
-              }`}
+              className={
+                activeMetric === "temperature" ? "font-bold shadow-xs" : ""
+              }
             >
-              <Thermometer className="h-3 w-3" />
+              <Thermometer data-icon="inline-start" className="size-3" />
               Temperature
-            </button>
-            <button
+            </Button>
+            <Button
+              variant={activeMetric === "precipitation" ? "default" : "ghost"}
+              size="xs"
               onClick={() => setActiveMetric("precipitation")}
-              className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 transition ${
-                activeMetric === "precipitation"
-                  ? "bg-[#9A7E3B] text-[#28301C] font-semibold"
-                  : "text-[#D2CF9A] hover:text-[#9A7E3B]"
-              }`}
+              className={
+                activeMetric === "precipitation" ? "font-bold shadow-xs" : ""
+              }
             >
-              <CloudRain className="h-3 w-3" />
+              <CloudRain data-icon="inline-start" className="size-3" />
               Precipitation
-            </button>
-            <button
+            </Button>
+            <Button
+              variant={activeMetric === "humidity" ? "default" : "ghost"}
+              size="xs"
               onClick={() => setActiveMetric("humidity")}
-              className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 transition ${
-                activeMetric === "humidity"
-                  ? "bg-[#9A7E3B] text-[#28301C] font-semibold"
-                  : "text-[#D2CF9A] hover:text-[#9A7E3B]"
-              }`}
+              className={
+                activeMetric === "humidity" ? "font-bold shadow-xs" : ""
+              }
             >
-              <Droplets className="h-3 w-3" />
+              <Droplets data-icon="inline-start" className="size-3" />
               Humidity
-            </button>
-            <button
+            </Button>
+            <Button
+              variant={activeMetric === "soil_moisture" ? "default" : "ghost"}
+              size="xs"
               onClick={() => setActiveMetric("soil_moisture")}
-              className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 transition ${
-                activeMetric === "soil_moisture"
-                  ? "bg-[#9A7E3B] text-[#28301C] font-semibold"
-                  : "text-[#D2CF9A] hover:text-[#9A7E3B]"
-              }`}
+              className={
+                activeMetric === "soil_moisture" ? "font-bold shadow-xs" : ""
+              }
             >
-              <Layers className="h-3 w-3" />
+              <Layers data-icon="inline-start" className="size-3" />
               Soil Moisture
-            </button>
+            </Button>
           </div>
 
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => setShowInspector(!showInspector)}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-[#435133] bg-[#28301C] px-3 py-1.5 text-xs font-medium text-[#D2CF9A] transition hover:border-[#9A7E3B] hover:text-[#9A7E3B]"
           >
-            <TableIcon className="h-3 w-3" />
-            {showInspector ? "Hide Daily Inspector" : "Inspect Raw Daily Values"}
-          </button>
+            <TableIcon data-icon="inline-start" className="size-3" />
+            {showInspector
+              ? "Hide Daily Inspector"
+              : "Inspect Raw Daily Values"}
+          </Button>
         </div>
-      </div>
+      </CardHeader>
 
-      {/* Chart Canvas */}
-      <div className="relative rounded-xl border border-[#435133]/60 bg-[#28301C]/80 p-4">
-        {/* Dynamic Hover Tooltip Banner */}
-        <div className="mb-2 flex flex-wrap items-center justify-between text-xs font-mono text-[#D2CF9A]">
-          {hoveredMonth ? (
-            <div className="flex flex-wrap items-center gap-4 text-xs font-mono">
-              <span className="font-bold text-[#9A7E3B]">{hoveredMonth.label}:</span>
+      <CardContent className="p-0 flex flex-col gap-4">
+        {/* Chart Canvas */}
+        <div className="relative rounded-xl border border-border bg-background/80 p-4">
+          {/* Dynamic Hover Tooltip Banner */}
+          <div className="mb-2 flex flex-wrap items-center justify-between text-xs font-mono text-foreground">
+            {hoveredMonth ? (
+              <div className="flex flex-wrap items-center gap-4 text-xs font-mono">
+                <span className="font-bold text-primary">
+                  {hoveredMonth.label}:
+                </span>
+                {activeMetric === "temperature" && (
+                  <>
+                    <span>
+                      Mean:{" "}
+                      <strong className="text-foreground">
+                        {hoveredMonth.t2mMean}°C
+                      </strong>
+                    </span>
+                    <span>
+                      Max:{" "}
+                      <strong className="text-primary">
+                        {hoveredMonth.t2mMax}°C
+                      </strong>
+                    </span>
+                    <span>
+                      Min:{" "}
+                      <strong className="text-sky-400">
+                        {hoveredMonth.t2mMin}°C
+                      </strong>
+                    </span>
+                  </>
+                )}
+                {activeMetric === "precipitation" && (
+                  <>
+                    <span>
+                      Total Accumulated:{" "}
+                      <strong className="text-sky-400">
+                        {hoveredMonth.precipSum !== null
+                          ? `${hoveredMonth.precipSum} mm`
+                          : "Unavailable"}
+                      </strong>
+                    </span>
+                    <span>
+                      Valid Days: {hoveredMonth.validDays}/
+                      {hoveredMonth.totalDays}
+                    </span>
+                  </>
+                )}
+                {activeMetric === "humidity" && (
+                  <span>
+                    Mean Relative Humidity:{" "}
+                    <strong className="text-[#3C7A89]">
+                      {hoveredMonth.rh2mMean}%
+                    </strong>
+                  </span>
+                )}
+                {activeMetric === "soil_moisture" && (
+                  <>
+                    <span>
+                      Surface:{" "}
+                      <strong className="text-sky-400">
+                        {hoveredMonth.gwettopMean
+                          ? `${(hoveredMonth.gwettopMean * 100).toFixed(1)}%`
+                          : "N/A"}
+                      </strong>
+                    </span>
+                    <span>
+                      Root:{" "}
+                      <strong className="text-[#28301C]">
+                        {hoveredMonth.gwetrootMean
+                          ? `${(hoveredMonth.gwetrootMean * 100).toFixed(1)}%`
+                          : "N/A"}
+                      </strong>
+                    </span>
+                    <span>
+                      Profile:{" "}
+                      <strong className="text-primary">
+                        {hoveredMonth.gwetprofMean
+                          ? `${(hoveredMonth.gwetprofMean * 100).toFixed(1)}%`
+                          : "N/A"}
+                      </strong>
+                    </span>
+                  </>
+                )}
+              </div>
+            ) : (
+              <span className="text-[11px] text-muted-foreground italic">
+                Hover over any point along the timeline to inspect monthly
+                aggregates.
+              </span>
+            )}
+
+            {/* Legend */}
+            <div className="flex items-center gap-3 text-[11px]">
               {activeMetric === "temperature" && (
                 <>
-                  <span>Mean: <strong className="text-[#D2CF9A]">{hoveredMonth.t2mMean}°C</strong></span>
-                  <span>Max: <strong className="text-[#E09F3E]">{hoveredMonth.t2mMax}°C</strong></span>
-                  <span>Min: <strong className="text-[#48CAE4]">{hoveredMonth.t2mMin}°C</strong></span>
+                  <span className="flex items-center gap-1">
+                    <span className="size-2 rounded-full bg-[#D6C99A]" /> Mean
+                    T2M
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="size-2 rounded-full bg-[#41644A]" /> Max
+                    Record
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="size-2 rounded-full bg-[#48CAE4]" /> Min
+                    Record
+                  </span>
                 </>
               )}
               {activeMetric === "precipitation" && (
-                <>
-                  <span>Total Accumulated: <strong className="text-[#48CAE4]">{hoveredMonth.precipSum} mm</strong></span>
-                  <span>Valid Days: {hoveredMonth.validDays}/{hoveredMonth.totalDays}</span>
-                </>
+                <span className="flex items-center gap-1">
+                  <span className="size-2 rounded-full bg-[#48CAE4]" /> Monthly
+                  Rainfall (mm)
+                </span>
               )}
               {activeMetric === "humidity" && (
-                <span>Mean Relative Humidity: <strong className="text-[#52B788]">{hoveredMonth.rh2mMean}%</strong></span>
+                <span className="flex items-center gap-1">
+                  <span className="size-2 rounded-full bg-[#3C7A89]" /> Mean
+                  RH2M (%)
+                </span>
               )}
               {activeMetric === "soil_moisture" && (
                 <>
-                  <span>Surface: <strong className="text-[#48CAE4]">{hoveredMonth.gwettopMean ? `${(hoveredMonth.gwettopMean * 100).toFixed(1)}%` : "N/A"}</strong></span>
-                  <span>Root: <strong className="text-[#52B788]">{hoveredMonth.gwetrootMean ? `${(hoveredMonth.gwetrootMean * 100).toFixed(1)}%` : "N/A"}</strong></span>
-                  <span>Profile: <strong className="text-[#9A7E3B]">{hoveredMonth.gwetprofMean ? `${(hoveredMonth.gwetprofMean * 100).toFixed(1)}%` : "N/A"}</strong></span>
+                  <span className="flex items-center gap-1">
+                    <span className="size-2 rounded-full bg-[#48CAE4]" />{" "}
+                    Surface (GWETTOP)
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="size-2 rounded-full bg-[#28301C]" /> Root
+                    Zone (GWETROOT)
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="size-2 rounded-full bg-[#41644A]" />{" "}
+                    Profile (GWETPROF)
+                  </span>
                 </>
               )}
             </div>
-          ) : (
-            <span className="text-[11px] text-[#9FA37C] italic">
-              Hover over any point along the timeline to inspect monthly aggregates.
-            </span>
-          )}
-
-          {/* Legend */}
-          <div className="flex items-center gap-3 text-[11px]">
-            {activeMetric === "temperature" && (
-              <>
-                <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[#D2CF9A]" /> Mean T2M</span>
-                <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[#E09F3E]" /> Max Record</span>
-                <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[#48CAE4]" /> Min Record</span>
-              </>
-            )}
-            {activeMetric === "precipitation" && (
-              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[#48CAE4]" /> Monthly Rainfall (mm)</span>
-            )}
-            {activeMetric === "humidity" && (
-              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[#52B788]" /> Mean RH2M (%)</span>
-            )}
-            {activeMetric === "soil_moisture" && (
-              <>
-                <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[#48CAE4]" /> Surface (GWETTOP)</span>
-                <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[#52B788]" /> Root Zone (GWETROOT)</span>
-                <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[#9A7E3B]" /> Profile (GWETPROF)</span>
-              </>
-            )}
           </div>
+
+          <div className="h-60 w-full">{renderChart()}</div>
         </div>
 
-        <div className="h-60 w-full">{renderChart()}</div>
-      </div>
+        {/* Daily Observations Inspector */}
+        {showInspector && (
+          <Card className="border-border bg-background/90 p-4 shadow-sm flex flex-col gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-2.5">
+              <div className="flex items-center gap-2">
+                <TableIcon className="size-4 text-primary" />
+                <h4 className="text-sm font-semibold text-foreground">
+                  Original Daily Observations Inspector
+                </h4>
+                <span className="text-[11px] text-muted-foreground">
+                  (Displaying recent observations; missing values marked as
+                  &quot;Missing / Null&quot; rather than zero)
+                </span>
+              </div>
 
-      {/* Daily Observations Inspector */}
-      {showInspector && (
-        <div className="rounded-xl border border-[#435133] bg-[#28301C] p-4 space-y-3">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#435133]/60 pb-2.5">
-            <div className="flex items-center gap-2">
-              <TableIcon className="h-4 w-4 text-[#9A7E3B]" />
-              <h4 className="text-sm font-semibold text-[#D2CF9A]">
-                Original Daily Observations Inspector
-              </h4>
-              <span className="text-[11px] text-[#9FA37C]">
-                (Displaying recent observations; missing values marked as &quot;Missing / Null&quot; rather than zero)
-              </span>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <div className="relative">
-                <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-[#9FA37C]" />
-                <input
-                  type="text"
-                  placeholder="Filter YYYY-MM..."
-                  value={inspectorFilter}
-                  onChange={(e) => {
-                    setInspectorFilter(e.target.value);
-                    setInspectorPage(0);
-                  }}
-                  className="rounded-md border border-[#435133] bg-[#323D25] py-1 pl-8 pr-2.5 text-xs text-[#D2CF9A] placeholder-[#9FA37C] focus:border-[#9A7E3B] focus:outline-none"
-                />
+              <div className="flex items-center gap-2">
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-2 size-3.5 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Filter YYYY-MM..."
+                    value={inspectorFilter}
+                    onChange={(e) => {
+                      setInspectorFilter(e.target.value);
+                      setInspectorPage(0);
+                    }}
+                    className="rounded-md border border-border bg-card py-1 pl-8 pr-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-hidden"
+                  />
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs font-mono">
-              <thead>
-                <tr className="border-b border-[#435133]/60 text-[10px] uppercase text-[#9FA37C]">
-                  <th className="py-2 pr-3">Date</th>
-                  <th className="py-2 pr-3">T2M (°C)</th>
-                  <th className="py-2 pr-3">Max/Min</th>
-                  <th className="py-2 pr-3">Precip (mm)</th>
-                  <th className="py-2 pr-3">RH2M (%)</th>
-                  <th className="py-2 pr-3">WS10M (m/s)</th>
-                  <th className="py-2 pr-3">Solar (MJ/m²)</th>
-                  <th className="py-2">GWET Top / Root</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#435133]/30">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-border bg-background/60 text-[10px] uppercase text-muted-foreground">
+                  <TableHead>Date</TableHead>
+                  <TableHead>T2M (°C)</TableHead>
+                  <TableHead>Max/Min</TableHead>
+                  <TableHead>Precip (mm)</TableHead>
+                  <TableHead>RH2M (%)</TableHead>
+                  <TableHead>WS10M (m/s)</TableHead>
+                  <TableHead>Solar (MJ/m²)</TableHead>
+                  <TableHead>GWET Top / Root</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody className="font-mono text-xs">
                 {pageObservations.map((obs) => (
-                  <tr key={obs.rawDate} className="hover:bg-[#323D25]/50">
-                    <td className="py-2 pr-3 font-semibold text-[#D2CF9A]">{obs.date}</td>
-                    <td className="py-2 pr-3">
+                  <TableRow
+                    key={obs.rawDate}
+                    className="border-border hover:bg-card/50"
+                  >
+                    <TableCell className="font-semibold text-foreground">
+                      {obs.date}
+                    </TableCell>
+                    <TableCell>
                       {obs.t2m !== null ? (
                         `${obs.t2m}°C`
                       ) : (
-                        <span className="text-red-400 italic">Missing</span>
+                        <span className="text-destructive italic">Missing</span>
                       )}
-                    </td>
-                    <td className="py-2 pr-3 text-[#9FA37C]">
-                      {obs.t2mMax !== null ? obs.t2mMax : "-"} / {obs.t2mMin !== null ? obs.t2mMin : "-"}
-                    </td>
-                    <td className="py-2 pr-3 text-[#48CAE4]">
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {obs.t2mMax !== null ? obs.t2mMax : "-"} /{" "}
+                      {obs.t2mMin !== null ? obs.t2mMin : "-"}
+                    </TableCell>
+                    <TableCell className="text-sky-400">
                       {obs.precip !== null ? (
                         `${obs.precip} mm`
                       ) : (
-                        <span className="text-red-400 italic">Missing</span>
+                        <span className="text-destructive italic">Missing</span>
                       )}
-                    </td>
-                    <td className="py-2 pr-3 text-[#52B788]">
+                    </TableCell>
+                    <TableCell className="text-[#3C7A89]">
                       {obs.rh2m !== null ? `${obs.rh2m}%` : "-"}
-                    </td>
-                    <td className="py-2 pr-3 text-[#9FA37C]">
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
                       {obs.ws10m !== null ? `${obs.ws10m}` : "-"}
-                    </td>
-                    <td className="py-2 pr-3 text-[#9A7E3B]">
+                    </TableCell>
+                    <TableCell className="text-primary">
                       {obs.solar !== null ? `${obs.solar}` : "-"}
-                    </td>
-                    <td className="py-2 text-[#9FA37C]">
-                      {obs.gwettop !== null ? obs.gwettop : "-"} / {obs.gwetroot !== null ? obs.gwetroot : "-"}
-                    </td>
-                  </tr>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {obs.gwettop !== null ? obs.gwettop : "-"} /{" "}
+                      {obs.gwetroot !== null ? obs.gwetroot : "-"}
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </TableBody>
+            </Table>
 
-          {/* Pagination */}
-          <div className="flex items-center justify-between border-t border-[#435133]/40 pt-2 text-xs text-[#9FA37C]">
-            <span>
-              Page {inspectorPage + 1} of {totalPages} ({filteredDaily.length} records)
-            </span>
-            <div className="flex items-center gap-1">
-              <button
-                disabled={inspectorPage === 0}
-                onClick={() => setInspectorPage((p) => Math.max(0, p - 1))}
-                className="rounded p-1 border border-[#435133] disabled:opacity-30 hover:border-[#9A7E3B]"
-              >
-                <ChevronLeft className="h-3.5 w-3.5" />
-              </button>
-              <button
-                disabled={inspectorPage >= totalPages - 1}
-                onClick={() => setInspectorPage((p) => p + 1)}
-                className="rounded p-1 border border-[#435133] disabled:opacity-30 hover:border-[#9A7E3B]"
-              >
-                <ChevronRight className="h-3.5 w-3.5" />
-              </button>
+            {/* Pagination */}
+            <div className="flex items-center justify-between border-t border-border pt-2 text-xs text-muted-foreground">
+              <span>
+                Page {inspectorPage + 1} of {totalPages} ({filteredDaily.length}{" "}
+                records)
+              </span>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="outline"
+                  size="icon-xs"
+                  disabled={inspectorPage === 0}
+                  onClick={() => setInspectorPage((p) => Math.max(0, p - 1))}
+                >
+                  <ChevronLeft className="size-3.5" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon-xs"
+                  disabled={inspectorPage >= totalPages - 1}
+                  onClick={() => setInspectorPage((p) => p + 1)}
+                >
+                  <ChevronRight className="size-3.5" />
+                </Button>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
-    </div>
+          </Card>
+        )}
+      </CardContent>
+    </Card>
   );
 }

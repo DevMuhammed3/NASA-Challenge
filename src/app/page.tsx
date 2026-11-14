@@ -14,6 +14,10 @@ import {
   Radio,
   ArrowRight,
   DollarSign,
+  Menu,
+  X,
+  ChevronRight,
+  ClipboardList,
 } from "lucide-react";
 import { GaiaLogo } from "@/components/GaiaLogo";
 import { NasaInteractiveMap } from "@/components/NasaInteractiveMap";
@@ -24,24 +28,85 @@ import { AiAdvisorSection } from "@/components/AiAdvisorSection";
 import { CropRecommendationsSection } from "@/components/CropRecommendationsSection";
 import { FarmEconomicsSection } from "@/components/FarmEconomicsSection";
 import { GREEN_VALLEY_LOCATION } from "@/lib/config/location";
+import { FarmerDashboardSection } from "@/components/farmer/FarmerDashboardSection";
 import type {
   EnvironmentalDataResponse,
   ProviderStatusItem,
 } from "@/lib/types/environmental";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 type ActiveTab =
   | "dashboard"
+  | "farmer_adss"
   | "crops"
   | "historical"
   | "economics"
   | "advisor"
   | "providers";
 
+interface NavItem {
+  id: ActiveTab;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  description: string;
+}
+
+const NAV_ITEMS: NavItem[] = [
+  {
+    id: "dashboard",
+    label: "Dashboard",
+    icon: Compass,
+    description: "Real-time agroclimatology & soil",
+  },
+  {
+    id: "farmer_adss",
+    label: "Farm Intelligence (ADSS)",
+    icon: ClipboardList,
+    description: "My farm, field plots & activities",
+  },
+  {
+    id: "crops",
+    label: "Crop Recommendations",
+    icon: Sprout,
+    description: "15-vegetable suitability engine",
+  },
+  {
+    id: "historical",
+    label: "5-Year Climate History",
+    icon: TrendingUp,
+    description: "NASA POWER 2021–2025 records",
+  },
+  {
+    id: "economics",
+    label: "Farm Economics & Profit",
+    icon: DollarSign,
+    description: "USDA market prices & budgets",
+  },
+  {
+    id: "advisor",
+    label: "AI Environmental Advisor",
+    icon: Sparkles,
+    description: "Grounded telemetry synthesis",
+  },
+  {
+    id: "providers",
+    label: "Data Sources & Telemetry",
+    icon: Database,
+    description: "Verified APIs & SSURGO status",
+  },
+];
+
 export default function GaiaApp() {
   const [activeTab, setActiveTab] = useState<ActiveTab>("dashboard");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
 
   // Data states (Fixed strictly to Green Valley, AZ for MVP phase)
-  const [telemetry, setTelemetry] = useState<EnvironmentalDataResponse | null>(null);
+  const [telemetry, setTelemetry] = useState<EnvironmentalDataResponse | null>(
+    null,
+  );
   const [providers, setProviders] = useState<ProviderStatusItem[]>([
     {
       id: "nasa_power",
@@ -62,6 +127,16 @@ export default function GaiaApp() {
       lastChecked: new Date().toISOString(),
     },
     {
+      id: "usda_ssurgo",
+      name: "USDA NRCS SSURGO / Soil Data Access",
+      category: "Soil Survey & Taxonomy",
+      status: "Connected",
+      message: "Soil Data Access REST service active. Map unit 53844 verified.",
+      dataProvided:
+        "Soil series, texture fractions, AWC, Ksat, taxonomic benchmark pH & salinity",
+      lastChecked: new Date().toISOString(),
+    },
+    {
       id: "google_geocoding",
       name: "Google Geocoding",
       category: "Location Resolution",
@@ -76,7 +151,8 @@ export default function GaiaApp() {
       category: "AI Environmental Advisor",
       status: "Configured",
       message: "Ready for telemetry synthesis.",
-      dataProvided: "Environmental conditions, opportunities, risks & recommendations",
+      dataProvided:
+        "Environmental conditions, opportunities, risks & recommendations",
       lastChecked: new Date().toISOString(),
     },
     {
@@ -96,32 +172,36 @@ export default function GaiaApp() {
 
   // Fetch telemetry from NASA POWER for Green Valley, AZ
   const fetchTelemetry = useCallback(async (forceRefresh = false) => {
-    if (forceRefresh) {
-      setIsRefreshing(true);
-    } else {
-      setIsLoading(true);
-    }
+    setIsLoading(true);
+    if (forceRefresh) setIsRefreshing(true);
     setErrorMsg(null);
 
     try {
       const queryParams = new URLSearchParams({
-        lat: String(GREEN_VALLEY_LOCATION.latitude),
-        lon: String(GREEN_VALLEY_LOCATION.longitude),
-        name: GREEN_VALLEY_LOCATION.name,
-        refresh: forceRefresh ? "true" : "false",
+        lat: GREEN_VALLEY_LOCATION.latitude.toString(),
+        lon: GREEN_VALLEY_LOCATION.longitude.toString(),
+        locationName: GREEN_VALLEY_LOCATION.name,
       });
 
-      const res = await fetch(`/api/power?${queryParams.toString()}`);
-      const data = await res.json();
-
-      if (res.ok && data.status === "Success") {
-        setTelemetry(data);
-      } else {
-        setErrorMsg(data.error || "Failed to load NASA POWER telemetry.");
+      if (forceRefresh) {
+        queryParams.set("refresh", "true");
       }
+
+      const res = await fetch(`/api/power?${queryParams.toString()}`);
+      if (!res.ok) {
+        throw new Error(
+          `Failed to load NASA POWER telemetry: HTTP ${res.status}`,
+        );
+      }
+
+      const data: EnvironmentalDataResponse = await res.json();
+      setTelemetry(data);
     } catch (err) {
+      console.error("Telemetry fetch error:", err);
       setErrorMsg(
-        err instanceof Error ? err.message : "Network error fetching NASA POWER"
+        err instanceof Error
+          ? err.message
+          : "Failed to load meteorological and soil telemetry.",
       );
     } finally {
       setIsLoading(false);
@@ -129,7 +209,7 @@ export default function GaiaApp() {
     }
   }, []);
 
-  // Fetch provider status check
+  // Fetch provider connection statuses
   const fetchProviderStatuses = useCallback(async () => {
     try {
       const res = await fetch("/api/providers");
@@ -154,251 +234,409 @@ export default function GaiaApp() {
     providers.find((p) => p.id === "nasa_power")?.status === "Connected"
       ? "Connected"
       : isLoading
-      ? "Loading"
-      : "Error";
+        ? "Loading"
+        : "Error";
 
   const geminiAvailable =
     providers.find((p) => p.id === "gemini_ai")?.status === "Configured" ||
     providers.find((p) => p.id === "ollama_ai")?.status === "Configured";
 
   return (
-    <div className="min-h-screen bg-[#28301C] text-[#D2CF9A] flex flex-col font-sans">
-      {/* Top Header */}
-      <header className="sticky top-0 z-30 border-b border-[#435133] bg-[#28301C]/95 backdrop-blur-md text-[#D2CF9A] shadow-xs">
-        <div className="mx-auto max-w-[1440px] px-4 py-3 sm:px-6 flex flex-wrap items-center justify-between gap-4">
-          {/* Logo & Platform Name */}
-          <div className="flex items-center gap-3">
-            <GaiaLogo size={38} />
+    <div className="min-h-screen bg-[#F5F3E9] text-[#28301C] flex font-sans">
+      {/* 1. Left Sidebar Navigation (Desktop) */}
+      <aside className="hidden lg:flex lg:w-72 lg:flex-col lg:fixed lg:inset-y-0 lg:left-0 z-40 border-r border-[#E2E6DA] bg-[#FFFFFF] shadow-sm justify-between">
+        <div className="flex flex-col flex-1 overflow-y-auto">
+          {/* Logo & Platform Name Header */}
+          <div className="p-5 border-b border-[#E2E6DA] flex items-center gap-3 bg-[#FFFFFF]">
+            <GaiaLogo />
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-mono text-lg font-bold tracking-tight text-[#D2CF9A]">
+                <span className="font-mono text-xl font-black tracking-tight text-[#28301C]">
                   GAIA
                 </span>
-                <span className="rounded bg-[#9A7E3B]/20 px-2 py-0.5 text-[10px] font-semibold text-[#D2CF9A] border border-[#9A7E3B]/40">
-                  Green Valley, AZ MVP
-                </span>
+                <Badge
+                  variant="outline"
+                  className="border-[#41644A]/40 bg-[#EEF0E6] text-[#243B2A] font-mono text-[9px] font-bold"
+                >
+                  MVP
+                </Badge>
               </div>
-              <p className="text-[11px] text-[#9FA37C]">
-                NASA Environmental Intelligence &amp; AI Crop Advisor
+              <p className="text-[11px] text-[#687365] font-medium leading-tight mt-0.5">
+                Earth Intelligence &amp; Crop Advisor
               </p>
             </div>
           </div>
 
-          {/* Navigation Tabs */}
-          <nav className="flex flex-wrap items-center gap-1 rounded-xl border border-[#435133] bg-[#323D25] p-1 text-xs">
-            <button
-              onClick={() => setActiveTab("dashboard")}
-              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 transition ${
-                activeTab === "dashboard"
-                  ? "bg-[#9A7E3B] font-bold text-[#28301C] shadow-sm"
-                  : "text-[#D2CF9A] hover:bg-[#435133]/50 hover:text-[#9A7E3B]"
-              }`}
-            >
-              <Compass className="h-3.5 w-3.5" />
-              Dashboard
-            </button>
-            <button
-              onClick={() => setActiveTab("crops")}
-              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 transition ${
-                activeTab === "crops"
-                  ? "bg-[#52B788] font-bold text-[#28301C] shadow-sm"
-                  : "text-[#74C69D] hover:bg-[#435133]/50 hover:text-[#52B788]"
-              }`}
-            >
-              <Sprout className="h-3.5 w-3.5" />
-              Crop Recommendations
-            </button>
-            <button
-              onClick={() => setActiveTab("historical")}
-              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 transition ${
-                activeTab === "historical"
-                  ? "bg-[#9A7E3B] font-bold text-[#28301C] shadow-sm"
-                  : "text-[#D2CF9A] hover:bg-[#435133]/50 hover:text-[#9A7E3B]"
-              }`}
-            >
-              <TrendingUp className="h-3.5 w-3.5" />
-              Historical Data (5-Year)
-            </button>
-            <button
-              onClick={() => setActiveTab("economics")}
-              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 transition ${
-                activeTab === "economics"
-                  ? "bg-[#52B788] font-bold text-[#28301C] shadow-sm"
-                  : "text-[#74C69D] hover:bg-[#435133]/50 hover:text-[#52B788]"
-              }`}
-            >
-              <DollarSign className="h-3.5 w-3.5" />
-              Farm Benefits & Profitability
-            </button>
-            <button
-              onClick={() => setActiveTab("advisor")}
-              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 transition ${
-                activeTab === "advisor"
-                  ? "bg-[#9A7E3B] font-bold text-[#28301C] shadow-sm"
-                  : "text-[#D2CF9A] hover:bg-[#435133]/50 hover:text-[#9A7E3B]"
-              }`}
-            >
-              <Sparkles className="h-3.5 w-3.5" />
-              AI Advisor
-            </button>
-            <button
-              onClick={() => setActiveTab("providers")}
-              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 transition ${
-                activeTab === "providers"
-                  ? "bg-[#9A7E3B] font-bold text-[#28301C] shadow-sm"
-                  : "text-[#D2CF9A] hover:bg-[#435133]/50 hover:text-[#9A7E3B]"
-              }`}
-            >
-              <Database className="h-3.5 w-3.5" />
-              Data Sources
-            </button>
-          </nav>
-
-          {/* Refresh Button */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => fetchTelemetry(true)}
-              disabled={isRefreshing || isLoading}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-[#435133] bg-[#323D25] px-3 py-1.5 text-xs font-semibold text-[#D2CF9A] transition hover:border-[#9A7E3B] hover:text-[#9A7E3B] disabled:opacity-50"
-            >
-              <RefreshCw
-                className={`h-3.5 w-3.5 ${
-                  isRefreshing ? "animate-spin text-[#9A7E3B]" : ""
-                }`}
-              />
-              <span>{isRefreshing ? "Refreshing..." : "Refresh NASA Data"}</span>
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Container */}
-      <main className="mx-auto max-w-[1440px] flex-1 px-4 py-6 sm:px-6 space-y-6 w-full">
-        {/* Fixed Prototype Location Banner (Section 1 Requirement) */}
-        <section className="rounded-2xl border border-[#435133] bg-[#323D25]/90 p-4 shadow-lg backdrop-blur-sm">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#9A7E3B]/20 border border-[#9A7E3B]/40 text-[#9A7E3B]">
-                  <MapPin className="h-4 w-4" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-sm sm:text-base font-bold text-[#D2CF9A]">
-                      {GREEN_VALLEY_LOCATION.name}
-                    </h2>
-                    <span className="rounded bg-[#52B788]/20 px-2 py-0.5 text-[10px] font-semibold text-[#52B788] border border-[#52B788]/40">
-                      Active Prototype Location
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-3 text-xs font-mono text-[#9FA37C] mt-0.5">
-                    <span>Latitude: {GREEN_VALLEY_LOCATION.latitude.toFixed(4)}°N</span>
-                    <span>Longitude: {GREEN_VALLEY_LOCATION.longitude.toFixed(4)}°W</span>
-                    <span>Elevation: {GREEN_VALLEY_LOCATION.elevationMeters}m (~3,150 ft)</span>
-                    <span className="text-[#9FA37C]/60">•</span>
-                    <span>Zone: USDA 9a/9b (Low-to-Mid Desert)</span>
-                  </div>
+          {/* Prototype Location Card in Sidebar */}
+          <div className="p-4 border-b border-[#E2E6DA] bg-[#EEF0E6]/50">
+            <div className="flex items-start gap-2.5">
+              <div className="p-1.5 rounded-md bg-[#FFFFFF] border border-[#E2E6DA] text-[#41644A] shrink-0">
+                <MapPin className="size-4" />
+              </div>
+              <div>
+                <span className="text-[10px] uppercase font-mono tracking-wider text-[#687365] block font-semibold">
+                  Fixed Prototype Site
+                </span>
+                <h4 className="text-xs font-bold text-[#28301C]">
+                  Green Valley, Arizona, USA
+                </h4>
+                <div className="text-[10px] font-mono text-[#687365] mt-0.5">
+                  31.8543°N, 111.0000°W (962m)
                 </div>
               </div>
             </div>
+          </div>
 
-            <div className="flex items-center gap-2 text-xs text-[#9FA37C]">
-              <span className="rounded bg-[#28301C] px-3 py-1 font-mono text-[11px] border border-[#435133]">
-                Dataset: 2021-01-01 to 2025-12-31 (1,826 days)
+          {/* Navigation Items List */}
+          <nav className="p-3 space-y-1.5 flex-1">
+            <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-[#687365]">
+              Main Sections
+            </div>
+            {NAV_ITEMS.map((item) => {
+              const Icon = item.icon;
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 cursor-pointer text-left active:scale-[0.98] ${
+                    isActive
+                      ? "bg-[#41644A] text-white shadow-xs font-bold hover:bg-[#34503B]"
+                      : "text-[#28301C] hover:bg-[#EEF0E6] hover:text-[#243B2A] active:bg-[#DCE2D5]"
+                  }`}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <Icon
+                      className={`size-4 shrink-0 ${isActive ? "text-white" : "text-[#41644A]"}`}
+                    />
+                    <div className="truncate">
+                      <div className="truncate">{item.label}</div>
+                      <div
+                        className={`text-[10px] font-normal truncate ${isActive ? "text-white/80" : "text-[#687365]"}`}
+                      >
+                        {item.description}
+                      </div>
+                    </div>
+                  </div>
+                  {isActive && (
+                    <ChevronRight className="size-3.5 text-white shrink-0 ml-1" />
+                  )}
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* Sidebar Footer Controls */}
+        <div className="p-4 border-t border-[#E2E6DA] bg-[#EEF0E6]/40 space-y-3">
+          <div className="flex items-center justify-between text-xs font-mono">
+            <span className="text-[#687365] flex items-center gap-1.5">
+              <span className="size-2 rounded-full bg-[#41644A] animate-pulse" />
+              NASA POWER
+            </span>
+            <span className="font-bold text-[#28301C]">{powerStatus}</span>
+          </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => fetchTelemetry(true)}
+            disabled={isRefreshing || isLoading}
+            className="w-full justify-center shadow-xs"
+          >
+            <RefreshCw
+              data-icon="inline-start"
+              className={`size-3.5 ${isRefreshing ? "animate-spin text-[#41644A]" : "text-[#41644A]"}`}
+            />
+            <span>{isRefreshing ? "Refreshing..." : "Refresh NASA Data"}</span>
+          </Button>
+
+          <div className="text-[10px] text-center text-[#687365] font-mono">
+            Dataset: 2021–2025 (1,826 days)
+          </div>
+        </div>
+      </aside>
+
+      {/* 2. Mobile Top Navigation Bar (< lg screens) */}
+      <div className="lg:hidden fixed top-0 inset-x-0 z-30 flex items-center justify-between px-4 py-3 bg-[#FFFFFF] border-b border-[#E2E6DA] shadow-xs">
+        <div className="flex items-center gap-2.5">
+          <GaiaLogo size={34} />
+          <div>
+            <div className="flex items-center gap-1.5">
+              <span className="font-mono text-base font-bold text-[#28301C]">
+                GAIA
+              </span>
+              <span className="text-[10px] text-[#687365] font-mono">
+                • Green Valley, AZ
               </span>
             </div>
           </div>
-        </section>
+        </div>
 
-        {/* Global Error Banner */}
-        {errorMsg && (
-          <div className="rounded-xl border border-red-700/60 bg-red-900/25 p-4 text-xs text-red-200 flex items-start gap-3">
-            <AlertCircle className="h-4 w-4 shrink-0 text-red-400 mt-0.5" />
-            <div>
-              <strong className="font-semibold">NASA POWER Ingestion Notice:</strong>{" "}
-              {errorMsg}
-            </div>
-          </div>
-        )}
+        <button
+          type="button"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="p-2 rounded-lg border border-[#E2E6DA] bg-[#FFFFFF] text-[#28301C] cursor-pointer transition-all duration-150 hover:bg-[#EEF0E6] hover:border-[#41644A] active:scale-95"
+          aria-label="Toggle navigation menu"
+        >
+          {mobileMenuOpen ? (
+            <X className="size-5" />
+          ) : (
+            <Menu className="size-5" />
+          )}
+        </button>
+      </div>
 
-        {/* Tab 1: Dashboard */}
-        {activeTab === "dashboard" && (
-          <div className="space-y-6">
-            {isLoading && !telemetry ? (
-              <div className="flex flex-col items-center justify-center rounded-2xl border border-[#435133] bg-[#323D25]/60 py-20">
-                <RefreshCw className="h-8 w-8 text-[#9A7E3B] animate-spin mb-3" />
-                <p className="text-sm font-semibold text-[#D2CF9A]">
-                  Retrieving 5-Year Historical Environmental Records from NASA POWER API...
-                </p>
-                <p className="text-xs text-[#9FA37C] mt-1">
-                  Ingesting 10 parameters for Green Valley, AZ (2021–2025).
-                </p>
+      {/* Mobile Drawer Overlay */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden fixed inset-0 z-40 bg-black/40 backdrop-blur-xs flex">
+          <div className="w-72 max-w-[80vw] bg-[#FFFFFF] border-r border-[#E2E6DA] h-full flex flex-col justify-between shadow-2xl p-4">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-[#E2E6DA]">
+                <div className="flex items-center gap-2">
+                  <GaiaLogo size={32} />
+                  <span className="font-mono font-bold text-base text-[#28301C]">
+                    GAIA
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="cursor-pointer p-1.5 rounded-md text-[#687365] transition-all duration-150 hover:bg-[#EEF0E6] hover:text-[#28301C]"
+                >
+                  <X className="size-5" />
+                </button>
               </div>
-            ) : telemetry ? (
-              <>
-                {/* Quick Feature Banners */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-[#52B788]/50 bg-[#52B788]/10 p-4 shadow-sm">
-                    <div className="flex items-center gap-3">
-                      <Sprout className="h-6 w-6 text-[#52B788] shrink-0" />
-                      <div>
-                        <h3 className="text-sm font-bold text-[#D2CF9A]">
-                          Vegetable Recommendations
-                        </h3>
-                        <p className="text-xs text-[#9FA37C]">
-                          15 vegetables evaluated against NASA climate extremes and seasonal windows.
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => setActiveTab("crops")}
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-[#52B788] px-3.5 py-1.5 text-xs font-bold text-[#28301C] transition hover:bg-[#74C69D]"
-                    >
-                      View Crops <ArrowRight className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
 
-                  <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-[#9A7E3B]/50 bg-[#9A7E3B]/10 p-4 shadow-sm">
-                    <div className="flex items-center gap-3">
-                      <DollarSign className="h-6 w-6 text-[#9A7E3B] shrink-0" />
-                      <div>
-                        <h3 className="text-sm font-bold text-[#D2CF9A]">
-                          Farm Benefits & Profitability
-                        </h3>
-                        <p className="text-xs text-[#9FA37C]">
-                          USDA Phoenix market prices, UA enterprise budgets & 3-tier scenario models.
-                        </p>
-                      </div>
-                    </div>
+              <nav className="space-y-1">
+                {NAV_ITEMS.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = activeTab === item.id;
+                  return (
                     <button
-                      onClick={() => setActiveTab("economics")}
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-[#9A7E3B] px-3.5 py-1.5 text-xs font-bold text-[#28301C] transition hover:bg-[#b29347]"
+                      key={item.id}
+                      onClick={() => {
+                        setActiveTab(item.id);
+                        setMobileMenuOpen(false);
+                      }}
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-left transition-all duration-150 cursor-pointer active:scale-[0.98] ${
+                        isActive
+                          ? "bg-[#41644A] text-white font-bold hover:bg-[#34503B]"
+                          : "text-[#28301C] hover:bg-[#EEF0E6] hover:text-[#243B2A] active:bg-[#DCE2D5]"
+                      }`}
                     >
-                      View Economics <ArrowRight className="h-3.5 w-3.5" />
+                      <Icon
+                        className={`size-4 shrink-0 ${isActive ? "text-white" : "text-[#41644A]"}`}
+                      />
+                      <span>{item.label}</span>
                     </button>
+                  );
+                })}
+              </nav>
+            </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                fetchTelemetry(true);
+                setMobileMenuOpen(false);
+              }}
+              disabled={isRefreshing || isLoading}
+              className="w-full"
+            >
+              <RefreshCw
+                className={`size-3.5 mr-1.5 ${isRefreshing ? "animate-spin" : ""}`}
+              />
+              <span>Refresh NASA Data</span>
+            </Button>
+          </div>
+          <div className="flex-1" onClick={() => setMobileMenuOpen(false)} />
+        </div>
+      )}
+
+      {/* 3. Main Content Container (Pushed right by sidebar on desktop) */}
+      <div className="lg:pl-72 flex flex-col flex-1 min-h-screen w-full">
+        {/* Main Content Area */}
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 flex flex-col gap-6 w-full max-w-7xl mx-auto pt-16 lg:pt-8">
+          {/* Prototype Location Banner */}
+          <Card className="border-[#E2E6DA] bg-[#FFFFFF] shadow-xs">
+            <CardContent className="p-4 flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="flex size-9 items-center justify-center rounded-lg bg-[#EEF0E6] border border-[#E2E6DA] text-[#41644A]">
+                  <MapPin className="size-4" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-base font-bold text-[#28301C]">
+                      {GREEN_VALLEY_LOCATION.name}
+                    </h2>
+                    <Badge
+                      variant="outline"
+                      className="border-[#41644A]/40 bg-[#EEF0E6] text-[#243B2A] font-semibold text-[10px]"
+                    >
+                      Active Prototype Site
+                    </Badge>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3 text-xs font-mono text-[#687365] mt-0.5">
+                    <span>
+                      Latitude: {GREEN_VALLEY_LOCATION.latitude.toFixed(4)}°N
+                    </span>
+                    <span>
+                      Longitude: {GREEN_VALLEY_LOCATION.longitude.toFixed(4)}°W
+                    </span>
+                    <span>
+                      Elevation: {GREEN_VALLEY_LOCATION.elevationMeters}m
+                      (~3,150 ft)
+                    </span>
+                    <span className="text-[#E2E6DA]">•</span>
+                    <span>Zone: USDA 9a/9b (Low-to-Mid Sonoran Desert)</span>
                   </div>
                 </div>
+              </div>
 
-                <DashboardMetrics
-                  location={telemetry.location}
-                  latestObservation={telemetry.latestObservation}
-                  summaryStats={telemetry.summaryStats}
-                  parameterMetadata={telemetry.parameterMetadata}
-                  retrievalTimestamp={telemetry.retrievalTimestamp}
-                  isCached={telemetry.isCached}
-                  providerStatus={powerStatus}
-                />
+              <div className="flex items-center gap-2">
+                <Badge
+                  variant="outline"
+                  className="border-[#E2E6DA] bg-[#EEF0E6]/60 font-mono text-[11px] text-[#243B2A] px-3 py-1"
+                >
+                  Dataset: 2021-01-01 to 2025-12-31 (1,826 days)
+                </Badge>
+              </div>
+            </CardContent>
+          </Card>
 
-                {/* Satellite Imagery Preview */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  <div className="lg:col-span-2">
-                    <NasaInteractiveMap
-                      lat={GREEN_VALLEY_LOCATION.latitude}
-                      lon={GREEN_VALLEY_LOCATION.longitude}
-                      locationName={GREEN_VALLEY_LOCATION.name}
-                    />
+          {/* Global Error Banner */}
+          {errorMsg && (
+            <Alert variant="destructive">
+              <AlertCircle className="size-4" />
+              <AlertTitle>NASA POWER Telemetry Notice</AlertTitle>
+              <AlertDescription>{errorMsg}</AlertDescription>
+            </Alert>
+          )}
+
+          {/* Tab 1: Dashboard */}
+          {activeTab === "dashboard" && (
+            <div className="flex flex-col gap-6">
+              {isLoading && !telemetry ? (
+                <div className="flex flex-col items-center justify-center rounded-2xl border border-[#E2E6DA] bg-[#FFFFFF] py-20 shadow-xs">
+                  <RefreshCw className="size-8 text-[#41644A] animate-spin mb-3" />
+                  <p className="text-sm font-semibold text-[#28301C]">
+                    Retrieving 5-Year Historical Environmental Records from NASA
+                    POWER API...
+                  </p>
+                  <p className="text-xs text-[#687365] mt-1 font-mono">
+                    Ingesting 10 parameters for Green Valley, AZ (2021–2025).
+                  </p>
+                </div>
+              ) : telemetry ? (
+                <>
+                  {/* Quick Feature Shortcut Banners */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Card className="border-[#E2E6DA] bg-[#FFFFFF] shadow-xs">
+                      <CardContent className="p-4 flex flex-wrap items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                          <ClipboardList className="size-6 text-[#41644A] shrink-0" />
+                          <div>
+                            <h3 className="text-sm font-bold text-[#28301C]">
+                              Farmer Intelligence (ADSS)
+                            </h3>
+                            <p className="text-xs text-[#687365]">
+                              Register fields, upload tests, and track farming activities.
+                            </p>
+                          </div>
+                        </div>
+                        <Button size="sm" onClick={() => setActiveTab("farmer_adss")}>
+                          Open ADSS{" "}
+                          <ArrowRight
+                            data-icon="inline-end"
+                            className="size-3.5"
+                          />
+                        </Button>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border-[#E2E6DA] bg-[#FFFFFF] shadow-xs">
+                      <CardContent className="p-4 flex flex-wrap items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                          <Sprout className="size-6 text-[#41644A] shrink-0" />
+                          <div>
+                            <h3 className="text-sm font-bold text-[#28301C]">
+                              Vegetable Suitability
+                            </h3>
+                            <p className="text-xs text-[#687365]">
+                              15 vegetables evaluated against NASA climate extremes.
+                            </p>
+                          </div>
+                        </div>
+                        <Button size="sm" onClick={() => setActiveTab("crops")}>
+                          View Crops{" "}
+                          <ArrowRight
+                            data-icon="inline-end"
+                            className="size-3.5"
+                          />
+                        </Button>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border-[#E2E6DA] bg-[#FFFFFF] shadow-xs">
+                      <CardContent className="p-4 flex flex-wrap items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                          <DollarSign className="size-6 text-[#41644A] shrink-0" />
+                          <div>
+                            <h3 className="text-sm font-bold text-[#28301C]">
+                              Farm Economics &amp; Profit
+                            </h3>
+                            <p className="text-xs text-[#687365]">
+                              USDA market prices, UA enterprise budgets &amp; scenarios.
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          onClick={() => setActiveTab("economics")}
+                        >
+                          View Economics{" "}
+                          <ArrowRight
+                            data-icon="inline-end"
+                            className="size-3.5"
+                          />
+                        </Button>
+                      </CardContent>
+                    </Card>
                   </div>
-                  <div className="space-y-6">
+
+                  <DashboardMetrics
+                    location={telemetry.location}
+                    latestObservation={telemetry.latestObservation}
+                    summaryStats={telemetry.summaryStats}
+                    parameterMetadata={telemetry.parameterMetadata}
+                    retrievalTimestamp={telemetry.retrievalTimestamp}
+                    isCached={telemetry.isCached}
+                    providerStatus={powerStatus}
+                    soilProfile={telemetry.soilProfile}
+                    provenance={telemetry.provenance}
+                  />
+
+                  {/* Satellite Imagery Preview */}
+                  <div className="grid grid-cols-1 gap-6">
+                    <div className="lg:col-span-2">
+                      <NasaInteractiveMap
+                        lat={GREEN_VALLEY_LOCATION.latitude}
+                        lon={GREEN_VALLEY_LOCATION.longitude}
+                        locationName={GREEN_VALLEY_LOCATION.name}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Historical Charts Quick Section */}
+                  <HistoricalDataSection
+                    monthlyAggregates={telemetry.monthlyAggregates}
+                    recentObservations={telemetry.recentDailyObservations}
+                    totalObservationsCount={telemetry.totalObservationsCount}
+                    parameterMetadata={telemetry.parameterMetadata}
+                  />
+                  <div className="flex flex-col gap-6">
                     <DataSourcesPanel
                       providers={providers}
                       isLoading={isLoading}
@@ -409,87 +647,88 @@ export default function GaiaApp() {
                       geminiAvailable={geminiAvailable}
                     />
                   </div>
-                </div>
+                </>
+              ) : null}
+            </div>
+          )}
 
-                {/* Historical Charts Quick Section */}
-                <HistoricalDataSection
-                  monthlyAggregates={telemetry.monthlyAggregates}
-                  recentObservations={telemetry.recentDailyObservations}
-                  totalObservationsCount={telemetry.totalObservationsCount}
-                  parameterMetadata={telemetry.parameterMetadata}
-                />
-              </>
-            ) : null}
-          </div>
-        )}
+          {/* Tab 2: Farmer ADSS */}
+          {activeTab === "farmer_adss" && (
+            <div className="flex flex-col gap-6">
+              <FarmerDashboardSection />
+            </div>
+          )}
 
-        {/* Tab 2: Crop Recommendations (New Feature) */}
-        {activeTab === "crops" && (
-          <div className="space-y-6">
-            <CropRecommendationsSection />
-          </div>
-        )}
+          {/* Tab 3: Crop Recommendations */}
+          {activeTab === "crops" && (
+            <div className="flex flex-col gap-6">
+              <CropRecommendationsSection />
+            </div>
+          )}
 
-        {/* Tab 3: Historical Data */}
-        {activeTab === "historical" && telemetry && (
-          <div className="space-y-6">
-            <HistoricalDataSection
-              monthlyAggregates={telemetry.monthlyAggregates}
-              recentObservations={telemetry.recentDailyObservations}
-              totalObservationsCount={telemetry.totalObservationsCount}
-              parameterMetadata={telemetry.parameterMetadata}
-            />
-          </div>
-        )}
+          {/* Tab 3: Historical Data */}
+          {activeTab === "historical" && telemetry && (
+            <div className="flex flex-col gap-6">
+              <HistoricalDataSection
+                monthlyAggregates={telemetry.monthlyAggregates}
+                recentObservations={telemetry.recentDailyObservations}
+                totalObservationsCount={telemetry.totalObservationsCount}
+                parameterMetadata={telemetry.parameterMetadata}
+              />
+            </div>
+          )}
 
-        {/* Tab 4: Farm Benefits & Profitability */}
-        {activeTab === "economics" && (
-          <div className="space-y-6">
-            <FarmEconomicsSection />
-          </div>
-        )}
+          {/* Tab 4: Farm Benefits & Profitability */}
+          {activeTab === "economics" && (
+            <div className="flex flex-col gap-6">
+              <FarmEconomicsSection />
+            </div>
+          )}
 
-        {/* Tab 5: AI Advisor */}
-        {activeTab === "advisor" && (
-          <div className="space-y-6">
-            <AiAdvisorSection
-              telemetry={telemetry}
-              geminiAvailable={geminiAvailable}
-            />
-          </div>
-        )}
+          {/* Tab 5: AI Advisor */}
+          {activeTab === "advisor" && (
+            <div className="flex flex-col gap-6">
+              <AiAdvisorSection
+                telemetry={telemetry}
+                geminiAvailable={geminiAvailable}
+              />
+            </div>
+          )}
 
-        {/* Tab 6: Data Sources Panel */}
-        {activeTab === "providers" && (
-          <div className="space-y-6">
-            <DataSourcesPanel
-              providers={providers}
-              isLoading={isLoading}
-              onRefresh={fetchProviderStatuses}
-            />
-          </div>
-        )}
-      </main>
+          {/* Tab 6: Data Sources Panel */}
+          {activeTab === "providers" && (
+            <div className="flex flex-col gap-6">
+              <DataSourcesPanel
+                providers={providers}
+                isLoading={isLoading}
+                onRefresh={fetchProviderStatuses}
+              />
+            </div>
+          )}
+        </main>
 
-      {/* Footer */}
-      <footer className="mt-auto border-t border-[#435133] bg-[#28301C]/90 py-5 text-center text-xs text-[#9FA37C]">
-        <div className="mx-auto max-w-[1440px] px-4 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-[#D2CF9A]">GAIA Environmental MVP</span>
-            <span>•</span>
-            <span>NASA POWER Daily API (2021–2025)</span>
-            <span>•</span>
-            <span>NASA GIBS WMTS</span>
-            <span>•</span>
-            <span>University of Arizona Cooperative Extension</span>
-            <span>•</span>
-            <span>Google Gemini 2.5 Flash</span>
+        {/* Footer */}
+        <footer className="mt-auto border-t border-[#E2E6DA] bg-[#FFFFFF] py-4 text-xs text-[#687365]">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-[#28301C]">
+                GAIA Environmental Platform
+              </span>
+              <span>•</span>
+              <span>NASA POWER (2021–2025)</span>
+              <span>•</span>
+              <span>USDA NRCS SSURGO</span>
+              <span>•</span>
+              <span>UA Cooperative Extension</span>
+            </div>
+            <div className="text-[11px] font-mono">
+              Fixed Prototype Site: {GREEN_VALLEY_LOCATION.name} (
+              {GREEN_VALLEY_LOCATION.latitude.toFixed(4)}°N,{" "}
+              {GREEN_VALLEY_LOCATION.longitude.toFixed(4)}°W)
+            </div>
           </div>
-          <div className="text-[11px] text-[#9FA37C]/80 font-mono">
-            Location: {GREEN_VALLEY_LOCATION.name} ({GREEN_VALLEY_LOCATION.latitude.toFixed(4)}°N, {GREEN_VALLEY_LOCATION.longitude.toFixed(4)}°W)
-          </div>
-        </div>
-      </footer>
+        </footer>
+      </div>
     </div>
   );
 }

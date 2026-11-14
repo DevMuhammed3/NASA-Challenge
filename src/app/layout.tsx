@@ -1,6 +1,15 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
+import { Rubik } from "next/font/google";
+import { cn } from "@/lib/utils";
+
+const rubik = Rubik({
+  subsets: ["latin", "arabic"],
+  weight: ["300", "400", "500", "600", "700", "800", "900"],
+  variable: "--font-sans",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "GAIA | Real Environmental Intelligence & NASA Telemetry MVP",
@@ -15,21 +24,25 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className={cn("font-sans", rubik.variable)}>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&family=JetBrains+Mono:wght@400;500;700&display=swap"
           rel="stylesheet"
         />
       </head>
       <body
         style={{
           fontFamily:
-            'Cairo, "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+            'var(--font-sans), Rubik, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         }}
-        className="min-h-screen bg-[#28301C] text-[#D2CF9A] antialiased selection:bg-[#9A7E3B] selection:text-[#28301C]"
+        className="min-h-screen bg-[#F5F3E9] text-[#28301C] antialiased selection:bg-[#41644A] selection:text-[#FFFFFF]"
       >
         {children}
       </body>

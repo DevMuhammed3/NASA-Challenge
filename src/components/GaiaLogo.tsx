@@ -10,7 +10,7 @@ interface GaiaLogoProps {
 }
 
 export function GaiaLogo({
-  size = 44,
+  size = 70,
   className = "",
   showBadge = false,
 }: GaiaLogoProps) {
@@ -23,7 +23,7 @@ export function GaiaLogo({
     >
       {!imageError ? (
         <Image
-          src="/logo.png"
+          src="/logo3.png"
           alt="GAIA Logo"
           width={size}
           height={size}
@@ -45,20 +45,20 @@ export function GaiaLogo({
             cy="32"
             r="30"
             fill="#28301C"
-            stroke="#9A7E3B"
+            stroke="#41644A"
             strokeWidth="2.2"
           />
           <path
             d="M22 46C20 39 21 30 27 24C33 18 43 17 47 17C47 25 44 34 37 40C31 45 25 46 22 46Z"
-            fill="#9A7E3B"
-            stroke="#D2CF9A"
+            fill="#41644A"
+            stroke="#D6C99A"
             strokeWidth="1.5"
           />
         </svg>
       )}
 
       {showBadge && (
-        <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#2D6A4F] text-[9px] font-bold text-[#FAF9F0] ring-2 ring-[#FAF9F0] shadow-xs">
+        <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#41644A] text-[9px] font-bold text-[#FFFFFF] ring-2 ring-[#FFFFFF] shadow-xs">
           AI
         </span>
       )}

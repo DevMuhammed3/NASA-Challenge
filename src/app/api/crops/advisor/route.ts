@@ -2,22 +2,38 @@ import { NextResponse } from "next/server";
 import { getHistoricalEnvironmentalData } from "@/lib/services/nasa-power";
 import { GREEN_VALLEY_LOCATION } from "@/lib/config/location";
 import { evaluateAllCrops } from "@/lib/crops/suitability-engine";
+import {
+  callOllama,
+  isAiAdvisorConfigured,
+  isOllamaAvailable,
+} from "@/lib/services/gemini-advisor";
 
 const GEMINI_MODEL = process.env.AI_MODEL || "gemini-2.5-flash";
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "llama3.3";
+
+// In-memory cache for crop advisor results
+let cachedCropAdvisor: { data: unknown; expiresAt: number } | null = null;
+const CACHE_TTL_MS = 15 * 60 * 1000;
 
 export async function POST() {
-  const geminiKey = process.env.GEMINI_API_KEY;
-  const ollamaKey = process.env.OLLAMA_API_KEY;
-
-  if (!geminiKey && !ollamaKey) {
+  if (!isAiAdvisorConfigured()) {
     return NextResponse.json(
       {
         status: "Error",
-        error: "Neither GEMINI_API_KEY nor OLLAMA_API_KEY is configured on the server.",
+        error: "Neither GEMINI_API_KEY nor OLLAMA is configured on the server.",
       },
       { status: 503 }
     );
   }
+
+  // Instant Cache Hit (<1ms)
+  if (cachedCropAdvisor && Date.now() < cachedCropAdvisor.expiresAt) {
+    return NextResponse.json(cachedCropAdvisor.data);
+  }
+
+  const geminiKey = process.env.GEMINI_API_KEY?.trim();
+  const ollamaConfigured = isOllamaAvailable();
+  const preferredProvider = (process.env.AI_PROVIDER || "google").toLowerCase();
 
   try {
     // 1. Ingest real NASA observations
@@ -86,11 +102,22 @@ Format your response with these exact 5 section headers in markdown:
     let providerName = "Google Gemini";
     let modelName = GEMINI_MODEL;
 
-    // Call Gemini API
-    if (geminiKey) {
+    // 1. If preferred provider is Ollama, try Ollama first
+    if (preferredProvider === "ollama" && ollamaConfigured) {
+      try {
+        generatedText = await callOllama(prompt);
+        providerName = "Ollama";
+        modelName = OLLAMA_MODEL;
+      } catch (ollamaErr) {
+        console.warn("Ollama crop advisor failed or offline:", ollamaErr);
+      }
+    }
+
+    // 2. Call Gemini API if not generated yet
+    if (!generatedText && geminiKey) {
       const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${geminiKey}`;
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 25000);
+      const timeoutId = setTimeout(() => controller.abort(), 9000);
 
       try {
         const res = await fetch(endpoint, {
@@ -100,48 +127,34 @@ Format your response with these exact 5 section headers in markdown:
           body: JSON.stringify({
             contents: [{ role: "user", parts: [{ text: prompt }] }],
             generationConfig: {
-              temperature: 0.2,
-              maxOutputTokens: 8192,
+              temperature: 0.15,
+              maxOutputTokens: 2500,
+              thinkingConfig: {
+                thinkingBudget: 0,
+              },
             },
           }),
         });
-
-        clearTimeout(timeoutId);
 
         if (res.ok) {
           const json = await res.json();
           generatedText = json?.candidates?.[0]?.content?.parts?.[0]?.text || "";
         }
       } catch (err) {
-        clearTimeout(timeoutId);
         console.warn("Gemini call error in crop advisor:", err);
+      } finally {
+        clearTimeout(timeoutId);
       }
     }
 
-    // Fallback to Ollama if Gemini failed or Ollama is primary
-    if (!generatedText && ollamaKey) {
+    // 3. Fallback to Ollama if Gemini failed and Ollama was not primary
+    if (!generatedText && ollamaConfigured && preferredProvider !== "ollama") {
       try {
-        const baseUrl = (process.env.OLLAMA_BASE_URL || "https://api.ollama.com").replace(/\/$/, "");
-        const res = await fetch(`${baseUrl}/api/chat`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${ollamaKey}`,
-          },
-          body: JSON.stringify({
-            model: process.env.OLLAMA_MODEL || "llama3.3",
-            messages: [{ role: "user", content: prompt }],
-            stream: false,
-          }),
-        });
-        if (res.ok) {
-          const json = await res.json();
-          generatedText = json?.message?.content || "";
-          providerName = "Ollama";
-          modelName = process.env.OLLAMA_MODEL || "llama3.3";
-        }
-      } catch (ollamaErr) {
-        console.warn("Ollama fallback error:", ollamaErr);
+        generatedText = await callOllama(prompt);
+        providerName = "Ollama";
+        modelName = OLLAMA_MODEL;
+      } catch {
+        // Fallback to deterministic
       }
     }
 
@@ -150,15 +163,22 @@ Format your response with these exact 5 section headers in markdown:
       ? parseCropAdvisorSections(generatedText)
       : generateDeterministicCropAdvisorFallback(evaluationSummary);
 
-    return NextResponse.json({
+    const payload = {
       status: "Success",
-      provider: providerName,
-      model: modelName,
+      provider: generatedText ? providerName : "Deterministic GAIA Agronomic Engine",
+      model: generatedText ? modelName : "University of Arizona Extension Baseline",
       sections,
       location: GREEN_VALLEY_LOCATION.name,
       disclaimer:
-        "AI Crop Advisory provides evidence-based agricultural context from NASA observations and University of Arizona extension publications. It is an advisory tool, not on-site agronomic certification. Soil chemistry and irrigation capacity must be verified prior to planting.",
-    });
+        "Field soil chemistry (pH, EC salinity, NPK) and laboratory irrigation water suitability are mandatory before commercial planting. GAIA provides deterministic guidance grounded in NASA POWER telemetry and University of Arizona research.",
+    };
+
+    cachedCropAdvisor = {
+      data: payload,
+      expiresAt: Date.now() + CACHE_TTL_MS,
+    };
+
+    return NextResponse.json(payload);
   } catch (error) {
     console.error("POST /api/crops/advisor error:", error);
     return NextResponse.json(

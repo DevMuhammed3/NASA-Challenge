@@ -1,19 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   generateEnvironmentalAnalysis,
-  isGeminiAvailable,
+  isAiAdvisorConfigured,
 } from "@/lib/services/gemini-advisor";
 import { getHistoricalEnvironmentalData } from "@/lib/services/nasa-power";
 import type { EnvironmentalDataResponse } from "@/lib/types/environmental";
 
 export async function POST(req: NextRequest) {
   try {
-    if (!isGeminiAvailable()) {
+    if (!isAiAdvisorConfigured()) {
       return NextResponse.json(
         {
           status: "Error",
           error:
-            "GEMINI_API_KEY is not configured on the server. The rest of the GAIA application continues operating with live NASA data.",
+            "No AI Advisor is configured on the server (neither Gemini nor Ollama). The rest of the GAIA application continues operating with live NASA data.",
         },
         { status: 503 }
       );

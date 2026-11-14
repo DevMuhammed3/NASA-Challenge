@@ -82,7 +82,15 @@ export function GaiaChatbotDrawer({
         content: welcomeContent,
       },
     ]);
-  }, [activeAnalysis?.id, activeAnalysis?.farmName, lang, topCrop?.nameAr, topCrop?.nameEn, topCrop?.suitabilityScore, activeAnalysis]);
+  }, [
+    activeAnalysis?.id,
+    activeAnalysis?.farmName,
+    lang,
+    topCrop?.nameAr,
+    topCrop?.nameEn,
+    topCrop?.suitabilityScore,
+    activeAnalysis,
+  ]);
 
   // Handle external prompt trigger (e.g., clicking "Ask GAIA about this crop" on a card)
   useEffect(() => {
@@ -189,11 +197,11 @@ export function GaiaChatbotDrawer({
           <button
             type="button"
             onClick={() => setIsOpen(true)}
-            className="group flex items-center gap-3 rounded-full border-2 border-[#D2CF9A]/80 bg-[#9A7E3B] px-4 py-2.5 text-[#28301C] shadow-[0_10px_30px_rgba(0,0,0,0.65)] transition-all hover:scale-105 hover:bg-[#b29347]"
+            className="group flex items-center gap-3 rounded-full border-2 border-[#D6C99A]/80 bg-[#41644A] px-4 py-2.5 text-white shadow-[0_10px_30px_rgba(36,59,42,0.35)] transition-all hover:scale-105 hover:bg-[#34503B]"
           >
             <GaiaLogo size={34} showBadge />
             <div className="text-right">
-              <div className="flex items-center gap-1.5 text-xs font-extrabold text-[#28301C]">
+              <div className="flex items-center gap-1.5 text-xs font-extrabold text-white">
                 <Sparkles className="h-3.5 w-3.5" />
                 <span>
                   {lang === "ar"
@@ -201,7 +209,7 @@ export function GaiaChatbotDrawer({
                     : "Ask GAIA AI Advisor (Optional)"}
                 </span>
               </div>
-              <div className="text-[10px] font-semibold text-[#28301C]/80">
+              <div className="text-[10px] font-semibold text-white/80">
                 {lang === "ar"
                   ? "يفسر نتائج تحليل ناسا لأرضك"
                   : "Explains your NASA field report"}
@@ -213,23 +221,23 @@ export function GaiaChatbotDrawer({
 
       {/* Slide-Up / Slide-Over Contextual Chatbot Panel */}
       {isOpen && (
-        <div className="fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col border-l border-[#9A7E3B] bg-[#28301C] shadow-[0_0_50px_rgba(0,0,0,0.85)] sm:inset-y-4 sm:right-4 sm:rounded-2xl sm:border">
+        <div className="fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col border-l border-[#E2E6DA] bg-[#FFFFFF] shadow-xl sm:inset-y-4 sm:right-4 sm:rounded-2xl sm:border">
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-[#435133] bg-[#323D25] px-4 py-3.5">
+          <div className="flex items-center justify-between border-b border-[#E2E6DA] bg-[#EEF0E6] px-4 py-3.5">
             <div className="flex items-center gap-3">
               <GaiaLogo size={38} showBadge />
               <div>
                 <div className="flex items-center gap-1.5">
-                  <h3 className="text-sm font-bold text-[#D2CF9A]">
+                  <h3 className="text-sm font-bold text-[#28301C]">
                     {lang === "ar"
                       ? "مستشار GAIA الزراعي الذكي"
                       : "GAIA Smart Agro-Advisor"}
                   </h3>
-                  <span className="rounded-full bg-[#9A7E3B]/25 border border-[#9A7E3B] px-2 py-0.5 text-[10px] font-mono text-[#D2CF9A]">
+                  <span className="rounded-full bg-[#FFFFFF] border border-[#E2E6DA] px-2 py-0.5 text-[10px] font-mono text-[#41644A] font-bold">
                     RAG + NASA
                   </span>
                 </div>
-                <p className="text-[11px] text-[#9FA37C]">
+                <p className="text-[11px] text-[#687365]">
                   {lang === "ar"
                     ? `مرتبط بتقرير: ${activeAnalysis?.farmName ?? "المزرعة"}`
                     : `Connected to: ${activeAnalysis?.farmName ?? "Active Field"}`}
@@ -240,7 +248,7 @@ export function GaiaChatbotDrawer({
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              className="rounded-lg border border-[#435133] bg-[#28301C] p-1.5 text-[#9FA37C] hover:border-[#9A7E3B] hover:text-[#D2CF9A]"
+              className="cursor-pointer rounded-lg border border-[#E2E6DA] bg-[#FFFFFF] p-1.5 text-[#687365] transition-all duration-150 hover:border-[#41644A] hover:bg-[#EEF0E6] hover:text-[#28301C]"
               aria-label="Close Chatbot"
             >
               <X className="h-4 w-4" />
@@ -251,7 +259,7 @@ export function GaiaChatbotDrawer({
           {activeAnalysis && (
             <div
               dir="ltr"
-              className="flex flex-wrap items-center justify-between gap-2 border-b border-[#435133] bg-[#1F2616] px-4 py-2 font-mono text-[11px] text-[#9FA37C]"
+              className="flex flex-wrap items-center justify-between gap-2 border-b border-[#E2E6DA] bg-[#FFFFFF] px-4 py-2 font-mono text-[11px] text-[#687365]"
             >
               <span>T2M: {activeAnalysis.avgTemp3Mo}°C</span>
               <span>•</span>
@@ -259,7 +267,7 @@ export function GaiaChatbotDrawer({
               <span>•</span>
               <span>pH: {activeAnalysis.soilPh}</span>
               <span>•</span>
-              <span className="text-[#52B788]">
+              <span className="text-[#41644A] font-bold">
                 Top: {topCrop?.nameEn} ({topCrop?.suitabilityScore}%)
               </span>
             </div>
@@ -277,22 +285,22 @@ export function GaiaChatbotDrawer({
                 <div
                   className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border ${
                     msg.role === "user"
-                      ? "border-[#9A7E3B] bg-[#9A7E3B] text-[#28301C]"
-                      : "border-[#52B788]/50 bg-[#323D25] text-[#D2CF9A]"
+                      ? "border-[#41644A] bg-[#41644A] text-white"
+                      : "border-[#E2E6DA] bg-[#EEF0E6] text-[#28301C]"
                   }`}
                 >
                   {msg.role === "user" ? (
                     <User className="h-3.5 w-3.5" />
                   ) : (
-                    <Bot className="h-3.5 w-3.5 text-[#9A7E3B]" />
+                    <Bot className="h-3.5 w-3.5 text-[#41644A]" />
                   )}
                 </div>
 
                 <div
                   className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-xs leading-relaxed whitespace-pre-line ${
                     msg.role === "user"
-                      ? "bg-[#9A7E3B] text-[#28301C] font-semibold"
-                      : "border border-[#435133] bg-[#323D25] text-[#D2CF9A]"
+                      ? "bg-[#41644A] text-white font-semibold"
+                      : "border border-[#E2E6DA] bg-[#FFFFFF] text-[#28301C]"
                   }`}
                 >
                   {msg.content}
@@ -301,8 +309,8 @@ export function GaiaChatbotDrawer({
             ))}
 
             {isLoading && (
-              <div className="flex items-center gap-2 text-xs text-[#9FA37C] px-2">
-                <MessageSquare className="h-4 w-4 animate-pulse text-[#9A7E3B]" />
+              <div className="flex items-center gap-2 text-xs text-[#687365] px-2">
+                <MessageSquare className="h-4 w-4 animate-pulse text-[#41644A]" />
                 <span>
                   {lang === "ar"
                     ? "يقرأ بيانات ناسا ويحلل الإجابة..."
@@ -314,9 +322,9 @@ export function GaiaChatbotDrawer({
           </div>
 
           {/* Quick Prompt Chips */}
-          <div className="border-t border-[#435133] bg-[#28301C] px-3 py-2">
-            <div className="mb-1.5 flex items-center gap-1 text-[11px] font-semibold text-[#9FA37C]">
-              <HelpCircle className="h-3 w-3 text-[#9A7E3B]" />
+          <div className="border-t border-[#E2E6DA] bg-[#FFFFFF] px-3 py-2">
+            <div className="mb-1.5 flex items-center gap-1 text-[11px] font-semibold text-[#687365]">
+              <HelpCircle className="h-3 w-3 text-[#41644A]" />
               <span>
                 {lang === "ar"
                   ? "أسئلة سريعة حول نتيجة أرضك:"
@@ -330,7 +338,7 @@ export function GaiaChatbotDrawer({
                   type="button"
                   onClick={() => handleSendPrompt(q)}
                   disabled={isLoading}
-                  className="rounded-lg border border-[#435133] bg-[#323D25] px-2.5 py-1 text-right text-[11px] text-[#D2CF9A] hover:border-[#9A7E3B] hover:bg-[#9A7E3B]/20 transition-colors"
+                  className="cursor-pointer rounded-lg border border-[#E2E6DA] bg-[#FFFFFF] px-2.5 py-1 text-right text-[11px] font-medium text-[#28301C] transition-all duration-150 hover:border-[#41644A] hover:bg-[#EEF0E6] hover:text-[#243B2A] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {q}
                 </button>
@@ -344,7 +352,7 @@ export function GaiaChatbotDrawer({
               e.preventDefault();
               handleSendPrompt();
             }}
-            className="flex items-center gap-2 border-t border-[#435133] bg-[#323D25] p-3"
+            className="flex items-center gap-2 border-t border-[#E2E6DA] bg-[#EEF0E6] p-3"
           >
             <input
               type="text"
@@ -355,12 +363,12 @@ export function GaiaChatbotDrawer({
                   ? "اسأل عن أي محصول، الري، أو معالجة التربة..."
                   : "Ask about any crop, irrigation, or soil pH..."
               }
-              className="flex-1 rounded-xl border border-[#435133] bg-[#28301C] px-3.5 py-2.5 text-xs text-[#D2CF9A] placeholder-[#9FA37C]/60 focus:border-[#9A7E3B] focus:outline-none"
+              className="flex-1 rounded-xl border border-[#E2E6DA] bg-[#FFFFFF] px-3.5 py-2.5 text-xs text-[#28301C] placeholder-[#687365]/70 focus:border-[#41644A] focus:outline-none"
             />
             <button
               type="submit"
               disabled={isLoading || !input.trim()}
-              className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#9A7E3B] text-[#28301C] hover:bg-[#b29347] disabled:opacity-50 transition-colors"
+              className="cursor-pointer flex h-9 w-9 items-center justify-center rounded-xl bg-[#41644A] text-white transition-all duration-150 hover:bg-[#34503B] disabled:cursor-not-allowed disabled:opacity-50 active:scale-95"
               aria-label="Send Message"
             >
               <Send className="h-4 w-4" />

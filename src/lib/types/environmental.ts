@@ -1,3 +1,6 @@
+import type { SsurgoSoilProfile } from "../services/usda-ssurgo";
+import type { DataPoint } from "./provenance";
+
 export interface NasaPowerParameterMeta {
   units: string;
   longname: string;
@@ -11,6 +14,7 @@ export interface DailyObservation {
   t2mMin: number | null; // °C
   precip: number | null; // mm/day
   rh2m: number | null; // %
+  ws2m?: number | null; // m/s (agricultural 2m standard)
   ws10m: number | null; // m/s
   solar: number | null; // MJ/m^2/day
   gwettop: number | null; // 0-1 fraction
@@ -26,7 +30,7 @@ export interface MonthlyAggregate {
   t2mMean: number | null;
   t2mMax: number | null;
   t2mMin: number | null;
-  precipSum: number; // accumulated mm
+  precipSum: number | null; // accumulated mm, null if no valid measurements
   rh2mMean: number | null;
   solarMean: number | null;
   gwettopMean: number | null;
@@ -45,6 +49,7 @@ export interface LatestObservation {
   t2mMin: number | null;
   precip: number | null;
   rh2m: number | null;
+  ws2m?: number | null;
   ws10m: number | null;
   solar: number | null;
   gwettop: number | null;
@@ -109,6 +114,8 @@ export interface EnvironmentalDataResponse {
   recentDailyObservations: DailyObservation[];
   totalObservationsCount: number;
   missingMeasurementsCount: number;
+  soilProfile?: SsurgoSoilProfile;
+  provenance?: Record<string, DataPoint<unknown>>;
   error?: string;
 }
 
@@ -116,6 +123,7 @@ export interface ProviderStatusItem {
   id:
     | "nasa_power"
     | "nasa_gibs"
+    | "usda_ssurgo"
     | "google_geocoding"
     | "gemini_ai"
     | "ollama_ai"

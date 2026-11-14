@@ -267,7 +267,7 @@ ${mentionedCrop.warningsAr.map((w) => `- ⚠️ ${w}`).join("\n")}`;
   // 5. Default comprehensive explanation of the top recommendations & why they were chosen
   if (lang === "en") {
     return `### 🌍 GAIA Decision Support Summary for **${ctx.farmName}**
-Based on live telemetry from **NASA POWER**, **NASA GIBS (NDVI = \`${ctx.ndviIndex}\`)**, and **SoilGrids (\`pH = ${ctx.soilPh}\`)**:
+Based on verified data from **NASA POWER Climatology**, **NASA GIBS Satellite Overlays**, and **USDA SSURGO Soil Survey (\`pH = ${ctx.soilPh}\`)**:
 
 1. **🥇 Top Recommended Crop: ${topCrop?.nameEn} (\`${topCrop?.suitabilityScore}%\`)**
    - ${topCrop?.reasonsEn?.[0] ?? "Optimal match with expected 3-month temperature and soil pH."}
@@ -277,11 +277,13 @@ Based on live telemetry from **NASA POWER**, **NASA GIBS (NDVI = \`${ctx.ndviInd
 3. **🥉 Third Alternative: ${thirdCrop?.nameEn} (\`${thirdCrop?.suitabilityScore}%\`)**
    - Family: \`${thirdCrop?.family}\` | Salinity Tolerance: \`${thirdCrop?.salinityTolerance}\`.
 
+*Note: NASA GIBS satellite tiles provide visual inspection; numerical NDVI requires calibrated multispectral raster reflectance data. Dynamic soil N-P-K requires a certified laboratory test.*
+
 Ask me about **specific crops** (e.g., *Wheat, Faba Bean, Barley, Maize*), **how to treat soil pH**, or **your 3-month irrigation schedule**!`;
   }
 
   return `### 🌍 ملخص قرار نظام GAIA الذكي لمزرعتك (**${ctx.farmName}**)
-بناءً على تحليل بيانات **NASA POWER** ومؤشر الغطاء النباتي **NASA GIBS (\`NDVI = ${ctx.ndviIndex}\`)** وبيانات التربة **SoilGrids (\`pH = ${ctx.soilPh}\`)**:
+بناءً على البيانات المعتمدة من **NASA POWER** والمرئيات الفضائية **NASA GIBS** ومسح التربة **USDA SSURGO (\`pH = ${ctx.soilPh}\`)**:
 
 1. **🥇 الخيار الأول الأنسب: ${topCrop?.nameAr} (بنسبة ملاءمة \`${topCrop?.suitabilityScore}%\`)**
    - ${topCrop?.reasonsAr?.[0] ?? "توافق ممتاز مع درجات الحرارة المتوقعة وقلوية التربة."}
@@ -376,14 +378,17 @@ export async function POST(req: NextRequest) {
     if (openAiKey && analysisContext) {
       try {
         const systemPrompt = `You are GAIA, an expert agricultural decision-support AI built for the NASA Space Apps Challenge.
-You do NOT guess. You explain and advise strictly based on the farmer's active NASA POWER, NASA GIBS NDVI, and ISRIC SoilGrids analysis report:
+You adhere to a STRICT ZERO MOCK DATA POLICY:
+- Never fabricate, estimate, or hallucinate missing measurements, weather data, soil values, market prices, or crop yields.
+- If a parameter is marked unavailable (e.g., dynamic N-P-K, real-time farm salinity, numerical NDVI), state clearly that it is unavailable and explain what lab test or physical sensor is required.
+- Do NOT cite numerical NDVI from NASA GIBS tiles as tiles are visual RGB composites only.
+You explain and advise strictly based on the farmer's active NASA POWER climatology and USDA SSURGO soil survey report:
 - Farm: ${analysisContext.farmName} (${analysisContext.latitude}, ${analysisContext.longitude})
 - 3-Month Expected Temperature (T2M): ${analysisContext.avgTemp3Mo}°C (Min: ${analysisContext.minTemp3Mo}°C, Max: ${analysisContext.maxTemp3Mo}°C)
 - Atmospheric Relative Humidity (RH2M): ${analysisContext.relativeHumidity}%
-- Soil pH (SoilGrids phh2o): ${analysisContext.soilPh} (${analysisContext.soilTextureEn})
+- Soil Taxonomy & pH (USDA SSURGO): ${analysisContext.soilPh} (${analysisContext.soilTextureEn})
 - 3-Month Total Precipitation (PRECTOTCORR): ${analysisContext.totalPrecip3Mo} mm
 - Root-Zone Soil Moisture (GWETROOT): ${analysisContext.soilMoistureRoot}%
-- Satellite NDVI (NASA GIBS): ${analysisContext.ndviIndex}
 - Previous Crop: ${analysisContext.previousCropCode || "None"}
 - Top Ranked Crops: ${analysisContext.recommendations
           ?.slice(0, 4)
@@ -392,7 +397,7 @@ You do NOT guess. You explain and advise strictly based on the farmer's active N
 - 3-Season Rotation Plan: ${analysisContext.rotationPlan
           ?.map((s) => `S${s.seasonNumber}: ${s.cropNameEn} (${s.nitrogenRoleEn})`)
           .join(" -> ")}
-Respond concisely and helpfully in ${lang === "en" ? "English" : "Arabic"}. Always cite the exact NASA/SoilGrids numbers.`;
+Respond concisely and helpfully in ${lang === "en" ? "English" : "Arabic"}. Always cite the exact verified NASA/SSURGO numbers.`;
 
         const llmRes = await fetch("https://api.openai.com/v1/chat/completions", {
           method: "POST",

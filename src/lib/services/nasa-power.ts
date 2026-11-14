@@ -6,6 +6,12 @@ import type {
   EnvironmentalDataResponse,
   NasaPowerParameterMeta,
 } from "../types/environmental";
+import { fetchGreenValleySoilData } from "./usda-ssurgo";
+import {
+  DataPoint,
+  createAvailableDataPoint,
+  createUnavailableDataPoint,
+} from "../types/provenance";
 
 const NASA_POWER_BASE_URL = "https://power.larc.nasa.gov/api/temporal/daily/point";
 
@@ -21,6 +27,7 @@ const ALL_PARAMETERS = [
   "T2M_MIN",
   "PRECTOTCORR",
   "RH2M",
+  "WS2M",
   "WS10M",
   "ALLSKY_SFC_SW_DWN",
   "GWETTOP",
@@ -34,6 +41,7 @@ const CLIMATE_PARAMETERS = [
   "T2M_MIN",
   "PRECTOTCORR",
   "RH2M",
+  "WS2M",
   "WS10M",
   "ALLSKY_SFC_SW_DWN",
 ];
@@ -46,6 +54,7 @@ export const PARAMETER_METADATA_FALLBACK: Record<string, NasaPowerParameterMeta>
   T2M_MIN: { units: "°C", longname: "Minimum Temperature at 2 Meters" },
   PRECTOTCORR: { units: "mm/day", longname: "Precipitation Corrected" },
   RH2M: { units: "%", longname: "Relative Humidity at 2 Meters" },
+  WS2M: { units: "m/s", longname: "Wind Speed at 2 Meters (Agricultural Standard)" },
   WS10M: { units: "m/s", longname: "Wind Speed at 10 Meters" },
   ALLSKY_SFC_SW_DWN: {
     units: "MJ/m^2/day",
@@ -255,6 +264,7 @@ export async function getHistoricalEnvironmentalData(
     const t2mMin = sanitizeValue(params.T2M_MIN?.[rawDate], fillValue);
     const precip = sanitizeValue(params.PRECTOTCORR?.[rawDate], fillValue);
     const rh2m = sanitizeValue(params.RH2M?.[rawDate], fillValue);
+    const ws2m = sanitizeValue(params.WS2M?.[rawDate], fillValue);
     const ws10m = sanitizeValue(params.WS10M?.[rawDate], fillValue);
     const solar = sanitizeValue(params.ALLSKY_SFC_SW_DWN?.[rawDate], fillValue);
     const gwettop = sanitizeValue(params.GWETTOP?.[rawDate], fillValue);
@@ -284,6 +294,7 @@ export async function getHistoricalEnvironmentalData(
       t2mMin,
       precip,
       rh2m,
+      ws2m,
       ws10m,
       solar,
       gwettop,
@@ -349,11 +360,11 @@ export async function getHistoricalEnvironmentalData(
     const t2mMin =
       validT2mMin.length > 0 ? Number(Math.min(...validT2mMin).toFixed(1)) : null;
 
-    // Correct aggregation for precipitation: SUM of valid daily mm in the month
+    // Correct aggregation for precipitation: SUM of valid daily mm in the month (null if no valid measurements)
     const precipSum =
       validPrecip.length > 0
         ? Number(validPrecip.reduce((a, b) => a + b, 0).toFixed(1))
-        : 0;
+        : null;
 
     const rh2mMean =
       validRh2m.length > 0
@@ -424,8 +435,11 @@ export async function getHistoricalEnvironmentalData(
     }
   }
 
+  const validMonthlyPrecip = monthlyAggregates
+    .map((m) => m.precipSum)
+    .filter((v): v is number => v !== null);
   const totalPrecipMm = Number(
-    monthlyAggregates.reduce((acc, m) => acc + m.precipSum, 0).toFixed(1)
+    validMonthlyPrecip.reduce((acc, v) => acc + v, 0).toFixed(1)
   );
   const distinctYears = new Set(monthlyAggregates.map((m) => m.year)).size || 5;
   const annualAvgPrecipMm = Number((totalPrecipMm / distinctYears).toFixed(1));
@@ -433,11 +447,13 @@ export async function getHistoricalEnvironmentalData(
   let wettestMonth = { month: "N/A", amountMm: 0 };
   let driestMonth = { month: "N/A", amountMm: Infinity };
   for (const m of monthlyAggregates) {
-    if (m.precipSum > wettestMonth.amountMm) {
-      wettestMonth = { month: m.label, amountMm: m.precipSum };
-    }
-    if (m.precipSum < driestMonth.amountMm) {
-      driestMonth = { month: m.label, amountMm: m.precipSum };
+    if (m.precipSum !== null) {
+      if (m.precipSum > wettestMonth.amountMm) {
+        wettestMonth = { month: m.label, amountMm: m.precipSum };
+      }
+      if (m.precipSum < driestMonth.amountMm) {
+        driestMonth = { month: m.label, amountMm: m.precipSum };
+      }
     }
   }
   if (driestMonth.amountMm === Infinity) driestMonth.amountMm = 0;
@@ -567,6 +583,7 @@ export async function getHistoricalEnvironmentalData(
     t2mMin: lastValidObs?.t2mMin ?? null,
     precip: lastValidObs?.precip ?? null,
     rh2m: lastValidObs?.rh2m ?? null,
+    ws2m: lastValidObs?.ws2m ?? null,
     ws10m: lastValidObs?.ws10m ?? null,
     solar: lastValidObs?.solar ?? null,
     gwettop: lastValidObs?.gwettop ?? null,
@@ -577,6 +594,86 @@ export async function getHistoricalEnvironmentalData(
   const isPredefined =
     Math.abs(lat - DEFAULT_PROTOTYPE_LOCATION.latitude) < 0.001 &&
     Math.abs(lon - DEFAULT_PROTOTYPE_LOCATION.longitude) < 0.001;
+
+  // Retrieve official USDA NRCS SSURGO soil survey data for Green Valley
+  const soilProfile = await fetchGreenValleySoilData(lat, lon);
+
+  // Standardized Data Provenance Records for all environmental metrics
+  const provenance: Record<string, DataPoint<unknown>> = {
+    t2m: createAvailableDataPoint({
+      value: latestObservation.t2m,
+      unit: "°C",
+      source: "NASA POWER Daily Point API (AG Community)",
+      sourceUrl: "https://power.larc.nasa.gov",
+      observationDate: latestObservation.date,
+      status: "live_api",
+      methodology: "Gridded MERRA-2 2-meter air temperature model assimilation",
+    }),
+    precip: createAvailableDataPoint({
+      value: latestObservation.precip,
+      unit: "mm/day",
+      source: "NASA POWER Daily Point API (AG Community)",
+      sourceUrl: "https://power.larc.nasa.gov",
+      observationDate: latestObservation.date,
+      status: "live_api",
+      methodology: "GPM IMERG / MERRA-2 bias-corrected daily precipitation",
+    }),
+    solar: createAvailableDataPoint({
+      value: latestObservation.solar,
+      unit: "MJ/m^2/day",
+      source: "NASA POWER Daily Point API (AG Community)",
+      sourceUrl: "https://power.larc.nasa.gov",
+      observationDate: latestObservation.date,
+      status: "live_api",
+      methodology: "NASA FLASHFlux / CERES all-sky solar irradiance",
+    }),
+    humidity: createAvailableDataPoint({
+      value: latestObservation.rh2m,
+      unit: "%",
+      source: "NASA POWER Daily Point API (AG Community)",
+      sourceUrl: "https://power.larc.nasa.gov",
+      observationDate: latestObservation.date,
+      status: "live_api",
+      methodology: "MERRA-2 2-meter relative humidity model assimilation",
+    }),
+    windSpeed: createAvailableDataPoint({
+      value: latestObservation.ws2m ?? latestObservation.ws10m,
+      unit: "m/s",
+      source: "NASA POWER Daily Point API (AG Community)",
+      sourceUrl: "https://power.larc.nasa.gov",
+      observationDate: latestObservation.date,
+      status: "live_api",
+      methodology: "MERRA-2 2-meter agricultural wind speed simulation",
+    }),
+    soilMoistureRoot: createAvailableDataPoint({
+      value: latestObservation.gwetroot,
+      unit: "fraction (0-1)",
+      source: "NASA POWER Daily Point API (AG Community)",
+      sourceUrl: "https://power.larc.nasa.gov",
+      observationDate: latestObservation.date,
+      status: "live_api",
+      methodology: "GEOS-5 Catchment Land Surface Model root-zone moisture (model estimate, not physical sensor)",
+    }),
+    ndvi: createUnavailableDataPoint({
+      unit: "index (-1 to 1)",
+      source: "NASA GIBS / MODIS",
+      sourceUrl: "https://gibs.earthdata.nasa.gov",
+      observationDate: latestObservation.date,
+      unavailableReason:
+        "Numerical NDVI cannot be calculated from 8-bit rendered WMTS map tiles. NASA GIBS provides visual overlays only.",
+      requiredMeasurementOrSource:
+        "Calibrated surface reflectance raster dataset (e.g. Landsat 8/9 Level-2 SR or Sentinel-2 Level-2A BOA) with atmospheric correction.",
+      methodology: "Visual WMTS tile inspection only; numerical extraction prohibited to avoid mock telemetry.",
+    }),
+    soilNitrogen: soilProfile.availableNitrogen,
+    soilPhosphorus: soilProfile.availablePhosphorus,
+    soilPotassium: soilProfile.availablePotassium,
+    fieldSoilPh: soilProfile.fieldMeasuredPh,
+    fieldSoilEc: soilProfile.fieldMeasuredSalinityEc,
+    taxonomicSoilPh: soilProfile.taxonomicSurveyPh,
+    taxonomicSoilEc: soilProfile.taxonomicSurveyEc,
+    irrigationWaterRights: soilProfile.irrigationWaterRights,
+  };
 
   const result: EnvironmentalDataResponse = {
     status: "Success",
@@ -603,6 +700,8 @@ export async function getHistoricalEnvironmentalData(
     recentDailyObservations: dailyObservations.slice(-30), // last 30 days for immediate preview
     totalObservationsCount: dailyObservations.length,
     missingMeasurementsCount,
+    soilProfile,
+    provenance,
   };
 
   memoryCache.set(cacheKey, {

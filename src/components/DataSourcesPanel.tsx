@@ -1,8 +1,36 @@
 "use client";
 
 import React from "react";
-import { CheckCircle2, AlertTriangle, XCircle, RefreshCw, Radio, Layers, MapPin, Sparkles, DollarSign, Database } from "lucide-react";
+import {
+  CheckCircle2,
+  AlertTriangle,
+  XCircle,
+  RefreshCw,
+  Radio,
+  Layers,
+  MapPin,
+  Sparkles,
+  DollarSign,
+  Database,
+} from "lucide-react";
 import type { ProviderStatusItem } from "@/lib/types/environmental";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "@/components/ui/table";
 
 interface DataSourcesPanelProps {
   providers: ProviderStatusItem[];
@@ -19,32 +47,44 @@ export function DataSourcesPanel({
     switch (status) {
       case "Connected":
         return (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#52B788]/20 px-2.5 py-0.5 text-xs font-medium text-[#52B788] border border-[#52B788]/40">
-            <CheckCircle2 className="h-3 w-3" />
+          <Badge
+            variant="outline"
+            className="border-[#41644A]/40 bg-[#41644A]/15 text-[#41644A] font-semibold text-xs"
+          >
+            <CheckCircle2 className="size-3 mr-1 text-[#41644A]" />
             Connected
-          </span>
+          </Badge>
         );
       case "Configured":
         return (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#9A7E3B]/20 px-2.5 py-0.5 text-xs font-medium text-[#D2CF9A] border border-[#9A7E3B]/40">
-            <CheckCircle2 className="h-3 w-3 text-[#9A7E3B]" />
+          <Badge
+            variant="outline"
+            className="border-primary/40 bg-primary/20 text-foreground font-semibold text-xs"
+          >
+            <CheckCircle2 className="size-3 mr-1 text-primary" />
             Configured
-          </span>
+          </Badge>
         );
       case "Missing":
         return (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#435133]/40 px-2.5 py-0.5 text-xs font-medium text-[#9FA37C] border border-[#435133]">
-            <AlertTriangle className="h-3 w-3" />
+          <Badge
+            variant="outline"
+            className="border-border bg-background text-muted-foreground font-semibold text-xs"
+          >
+            <AlertTriangle className="size-3 mr-1" />
             Missing (Fallback Active)
-          </span>
+          </Badge>
         );
       case "Error":
       default:
         return (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-red-900/30 px-2.5 py-0.5 text-xs font-medium text-red-300 border border-red-700/50">
-            <XCircle className="h-3 w-3 text-red-400" />
+          <Badge
+            variant="outline"
+            className="border-destructive/40 bg-destructive/20 text-destructive font-semibold text-xs"
+          >
+            <XCircle className="size-3 mr-1 text-destructive" />
             Error
-          </span>
+          </Badge>
         );
     }
   };
@@ -52,82 +92,100 @@ export function DataSourcesPanel({
   const getProviderIcon = (id: string) => {
     switch (id) {
       case "nasa_power":
-        return <Radio className="h-4 w-4 text-[#9A7E3B]" />;
+        return <Radio className="size-4 text-primary" />;
       case "nasa_gibs":
-        return <Layers className="h-4 w-4 text-[#74C69D]" />;
+        return <Layers className="size-4 text-[#3C7A89]" />;
       case "google_geocoding":
-        return <MapPin className="h-4 w-4 text-[#48CAE4]" />;
+        return <MapPin className="size-4 text-[#3C7A89]" />;
       case "gemini_ai":
-        return <Sparkles className="h-4 w-4 text-[#D2CF9A]" />;
+        return <Sparkles className="size-4 text-foreground" />;
       case "usda_mymarketnews":
-        return <DollarSign className="h-4 w-4 text-[#52B788]" />;
+        return <DollarSign className="size-4 text-[#41644A]" />;
       case "usda_nass":
-        return <Database className="h-4 w-4 text-[#9A7E3B]" />;
+        return <Database className="size-4 text-primary" />;
       default:
-        return <Radio className="h-4 w-4 text-[#9A7E3B]" />;
+        return <Radio className="size-4 text-primary" />;
     }
   };
 
   return (
-    <div className="rounded-2xl border border-[#435133] bg-[#323D25]/90 p-5 shadow-xl backdrop-blur-sm">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#435133]/60 pb-3">
+    <Card className="border-border bg-card/90 shadow-xl backdrop-blur-xs">
+      <CardHeader className="p-5 pb-3 flex flex-wrap items-center justify-between gap-3 border-b border-border">
         <div>
           <div className="flex items-center gap-2">
-            <span className="inline-block h-2 w-2 rounded-full bg-[#52B788] animate-pulse" />
-            <h3 className="text-base font-bold text-[#D2CF9A]">Active Data Providers</h3>
+            <span className="inline-block size-2 rounded-full bg-[#41644A] animate-pulse" />
+            <CardTitle className="text-base font-bold text-foreground">
+              Active Data Providers
+            </CardTitle>
           </div>
-          <p className="mt-0.5 text-xs text-[#9FA37C]">
-            Live provider telemetry responses (not hardcoded statuses). Excludes SoilGrids, FAOSTAT, and paid imagery.
-          </p>
+          <CardDescription className="mt-0.5 text-xs text-muted-foreground">
+            Live provider telemetry responses (not hardcoded statuses). Excludes
+            SoilGrids, FAOSTAT, and paid imagery.
+          </CardDescription>
         </div>
-        <button
+        <Button
+          variant="outline"
+          size="sm"
           onClick={onRefresh}
           disabled={isLoading}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-[#435133] bg-[#28301C] px-3 py-1.5 text-xs font-medium text-[#D2CF9A] transition hover:border-[#9A7E3B] hover:text-[#9A7E3B] disabled:opacity-50"
         >
-          <RefreshCw className={`h-3 w-3 ${isLoading ? "animate-spin" : ""}`} />
+          <RefreshCw
+            data-icon="inline-start"
+            className={`size-3 ${isLoading ? "animate-spin" : ""}`}
+          />
           Verify Connections
-        </button>
-      </div>
+        </Button>
+      </CardHeader>
 
-      <div className="mt-3 overflow-x-auto">
-        <table className="w-full text-left text-xs">
-          <thead>
-            <tr className="border-b border-[#435133]/60 text-[11px] font-semibold uppercase tracking-wider text-[#9FA37C]">
-              <th className="py-2.5 pr-4">Provider</th>
-              <th className="py-2.5 pr-4">Status</th>
-              <th className="py-2.5 pr-4">Data Ingested</th>
-              <th className="py-2.5 text-right">Diagnostic Note</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[#435133]/30">
+      <CardContent className="p-0">
+        <Table>
+          <TableHeader>
+            <TableRow className="border-border bg-background/60">
+              <TableHead className="font-bold text-foreground">
+                Provider
+              </TableHead>
+              <TableHead className="font-bold text-foreground">
+                Status
+              </TableHead>
+              <TableHead className="font-bold text-foreground">
+                Data Ingested
+              </TableHead>
+              <TableHead className="text-right font-bold text-foreground">
+                Diagnostic Note
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {providers.map((p) => (
-              <tr key={p.id} className="transition hover:bg-[#28301C]/40">
-                <td className="py-3 pr-4 font-medium text-[#D2CF9A]">
+              <TableRow
+                key={p.id}
+                className="border-border hover:bg-background/40"
+              >
+                <TableCell className="font-medium text-foreground">
                   <div className="flex items-center gap-2">
                     {getProviderIcon(p.id)}
                     <span>{p.name}</span>
                   </div>
-                </td>
-                <td className="py-3 pr-4 whitespace-nowrap">
+                </TableCell>
+                <TableCell className="whitespace-nowrap">
                   {getStatusBadge(p.status)}
-                </td>
-                <td className="py-3 pr-4 text-[#D2CF9A]/90">
-                  <span className="font-mono text-[11px]">{p.dataProvided}</span>
-                </td>
-                <td className="py-3 text-right text-[11px] text-[#9FA37C]">
+                </TableCell>
+                <TableCell className="text-foreground/90 font-mono text-[11px]">
+                  {p.dataProvided}
+                </TableCell>
+                <TableCell className="text-right text-[11px] text-muted-foreground">
                   {p.message}
                   {p.latencyMs !== undefined && (
-                    <span className="ml-2 font-mono text-[10px] text-[#9FA37C]/80">
+                    <span className="ml-2 font-mono text-[10px] text-muted-foreground/80">
                       ({p.latencyMs}ms)
                     </span>
                   )}
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
   );
 }
