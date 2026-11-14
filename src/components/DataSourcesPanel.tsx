@@ -109,7 +109,7 @@ export function DataSourcesPanel({
   };
 
   return (
-    <Card className="border-border bg-card/90 shadow-xl backdrop-blur-xs">
+    <Card className="border-border bg-card/90 shadow-xl backdrop-blur-xs min-w-0">
       <CardHeader className="p-5 pb-3 flex flex-wrap items-center justify-between gap-3 border-b border-border">
         <div>
           <div className="flex items-center gap-2">

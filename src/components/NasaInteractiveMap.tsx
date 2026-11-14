@@ -206,7 +206,7 @@ export function NasaInteractiveMap({
   };
 
   return (
-    <div className="space-y-4 rounded-2xl border border-[#E2E6DA] bg-[#FFFFFF] p-5 shadow-sm">
+    <div className="space-y-4 rounded-2xl border border-[#E2E6DA] bg-[#FFFFFF] p-3.5 sm:p-5 shadow-sm min-w-0">
       {/* Header & Layer Selector Controls */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E2E6DA] pb-3">
         <div>
@@ -275,7 +275,7 @@ export function NasaInteractiveMap({
             />
           </div>
 
-          <div className="flex items-center gap-2 border-l border-[#E2E6DA] pl-3">
+          <div className="flex items-center gap-2 border-l-0 sm:border-l border-[#E2E6DA] pl-0 sm:pl-3">
             <button
               onClick={() => setShowSatelliteOverlay(!showSatelliteOverlay)}
               className={`flex items-center gap-1 rounded px-2.5 py-1 text-[11px] font-medium border cursor-pointer transition-all duration-150 active:scale-[0.98] ${
@@ -362,7 +362,7 @@ export function NasaInteractiveMap({
         )}
 
         {/* Map Watermark Notice */}
-        <div className="absolute bottom-2 right-2 z-10 rounded-md bg-[#FFFFFF]/95 px-2.5 py-1 text-[10px] text-[#687365] border border-[#E2E6DA] backdrop-blur-sm shadow-xs font-mono">
+        <div className="absolute bottom-2 right-2 z-10 rounded-md bg-[#FFFFFF]/95 px-2 py-1 text-[10px] text-[#687365] border border-[#E2E6DA] backdrop-blur-sm shadow-xs font-mono max-w-[calc(100%-1rem)] truncate">
           <span>
             Marker: {lat.toFixed(4)}°N, {lon.toFixed(4)}°W (Prototype Location)
           </span>

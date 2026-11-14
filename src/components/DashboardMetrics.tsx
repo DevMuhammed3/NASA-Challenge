@@ -81,9 +81,9 @@ export function DashboardMetrics({
     : "Never";
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-5 min-w-0">
       {/* Location & Status Banner */}
-      <Card className="border-[#E2E6DA] bg-[#FFFFFF] p-5 shadow-xs">
+      <Card className="border-[#E2E6DA] bg-[#FFFFFF] p-3.5 sm:p-5 shadow-xs">
         <CardContent className="p-0 flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-col gap-1">
             <div className="flex flex-wrap items-center gap-2">
@@ -334,11 +334,11 @@ export function DashboardMetrics({
       </div>
 
       {/* NASA POWER Model-Derived Soil Wetness Card */}
-      <Card className="border-[#E2E6DA] bg-[#FFFFFF] p-5 shadow-xs">
-        <CardHeader className="p-0 flex flex-row items-center justify-between border-b border-[#E2E6DA] pb-3">
-          <div className="flex items-center gap-2">
-            <Layers className="size-5 text-[#41644A]" />
-            <CardTitle className="text-base font-bold text-[#28301C] flex items-center gap-2">
+      <Card className="border-[#E2E6DA] bg-[#FFFFFF] p-3.5 sm:p-5 shadow-xs">
+        <CardHeader className="p-0 flex flex-wrap items-center justify-between border-b border-[#E2E6DA] pb-3 gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <Layers className="size-5 text-[#41644A] shrink-0" />
+            <CardTitle className="text-base font-bold text-[#28301C] flex flex-wrap items-center gap-2">
               <span>
                 NASA POWER Hydrologic Soil Moisture Simulation (GEOS-5)
               </span>
@@ -450,12 +450,12 @@ export function DashboardMetrics({
       </Card>
 
       {/* USDA NRCS SSURGO Soil Survey & Ground-Truth Card */}
-      <Card className="border-[#E2E6DA] bg-[#FFFFFF] p-5 shadow-xs">
+      <Card className="border-[#E2E6DA] bg-[#FFFFFF] p-3.5 sm:p-5 shadow-xs">
         <CardHeader className="p-0 flex flex-wrap items-center justify-between border-b border-[#E2E6DA] pb-3 gap-2">
-          <div className="flex items-center gap-2">
-            <FlaskConical className="size-5 text-[#41644A]" />
-            <div>
-              <CardTitle className="text-base font-bold text-[#28301C] flex items-center gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <FlaskConical className="size-5 text-[#41644A] shrink-0" />
+            <div className="min-w-0">
+              <CardTitle className="text-base font-bold text-[#28301C] flex flex-wrap items-center gap-2">
                 <span>USDA NRCS SSURGO Soil Survey (Map Unit 53844)</span>
                 <DataProvenanceBadge
                   status="live_api"
@@ -464,7 +464,7 @@ export function DashboardMetrics({
                   methodology="Official spatial WKT intersect query with National Soil Survey Geographic Database"
                 />
               </CardTitle>
-              <CardDescription className="text-xs text-[#5C5838]">
+              <CardDescription className="text-xs text-[#5C5838] truncate">
                 NCSS Soil Survey AZ669:{" "}
                 {soilProfile?.mapUnitName.value ||
                   "Arizo-Riverwash complex, 0 to 3 percent slopes"}
@@ -489,7 +489,7 @@ export function DashboardMetrics({
 
         <CardContent className="p-0 pt-4 space-y-4">
           {/* Verified Physical Properties Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
             <div className="p-3 rounded-lg bg-[#EEF0E6]/60 border border-[#E2E6DA]">
               <span className="text-[#687365] text-[10px] uppercase font-mono block">
                 Dominant Series
@@ -541,8 +541,8 @@ export function DashboardMetrics({
           </div>
 
           {/* Explicit Ground-Truth Data Gaps Notice (Zero Mock Enforcement) */}
-          <div className="p-4 rounded-xl bg-[#EEF0E6]/80 border border-[#E2E6DA] space-y-2.5">
-            <div className="flex items-center justify-between border-b border-[#E2E6DA] pb-2">
+          <div className="p-3.5 sm:p-4 rounded-xl bg-[#EEF0E6]/80 border border-[#E2E6DA] space-y-2.5">
+            <div className="flex flex-wrap items-center justify-between border-b border-[#E2E6DA] pb-2 gap-2">
               <div className="flex items-center gap-1.5 text-xs font-bold text-[#28301C]">
                 <AlertTriangle className="size-4 text-[#41644A]" />
                 <span>

@@ -153,7 +153,7 @@ export function DataProvenanceBadge({
         <div
           onMouseEnter={() => setIsOpen(true)}
           onMouseLeave={() => setIsOpen(false)}
-          className={`absolute ${positionClasses} ${alignClasses} z-[100] w-72 sm:w-80 p-3.5 rounded-xl bg-[#FFFFFF] border border-[#E2E6DA] shadow-2xl text-xs text-[#28301C] space-y-2 pointer-events-auto ring-1 ring-black/5 animate-in fade-in-0 zoom-in-95 duration-150`}
+          className={`absolute ${positionClasses} ${alignClasses} z-[100] w-[calc(100vw-2.5rem)] max-w-xs sm:w-80 p-3.5 rounded-xl bg-[#FFFFFF] border border-[#E2E6DA] shadow-2xl text-xs text-[#28301C] space-y-2 pointer-events-auto ring-1 ring-black/5 animate-in fade-in-0 zoom-in-95 duration-150`}
         >
           <div className="flex items-center justify-between border-b border-[#E2E6DA] pb-1.5">
             <span className="font-semibold text-[#28301C] flex items-center gap-1.5">

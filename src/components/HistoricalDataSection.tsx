@@ -131,7 +131,7 @@ export function HistoricalDataSection({
       return (
         <svg
           viewBox={`0 0 ${chartWidth} ${chartHeight}`}
-          className="h-full w-full overflow-visible"
+          className="h-full w-full overflow-hidden"
         >
           {/* Grid lines */}
           {[minY, Math.round((minY + maxY) / 2), maxY].map((val) => (
@@ -246,7 +246,7 @@ export function HistoricalDataSection({
       return (
         <svg
           viewBox={`0 0 ${chartWidth} ${chartHeight}`}
-          className="h-full w-full overflow-visible"
+          className="h-full w-full overflow-hidden"
         >
           {[0, Math.round(maxPrecip / 2), maxPrecip].map((val) => (
             <g key={val}>
@@ -331,7 +331,7 @@ export function HistoricalDataSection({
       return (
         <svg
           viewBox={`0 0 ${chartWidth} ${chartHeight}`}
-          className="h-full w-full overflow-visible"
+          className="h-full w-full overflow-hidden"
         >
           {[0, 25, 50, 75, 100].map((val) => (
             <g key={val}>
@@ -430,7 +430,7 @@ export function HistoricalDataSection({
     return (
       <svg
         viewBox={`0 0 ${chartWidth} ${chartHeight}`}
-        className="h-full w-full overflow-visible"
+        className="h-full w-full overflow-hidden"
       >
         {[0, 0.25, 0.5, 0.75, 1.0].map((val) => (
           <g key={val}>
@@ -511,7 +511,7 @@ export function HistoricalDataSection({
       : null;
 
   return (
-    <Card className="border-border bg-card/90 p-5 shadow-xl backdrop-blur-xs flex flex-col gap-4">
+    <Card className="border-border bg-card/90 p-3.5 sm:p-5 shadow-xl backdrop-blur-xs flex flex-col gap-4 min-w-0">
       {/* Header & Controls */}
       <CardHeader className="p-0 pb-3 flex flex-wrap items-center justify-between gap-3 border-b border-border">
         <div>
@@ -531,7 +531,7 @@ export function HistoricalDataSection({
 
         <div className="flex flex-wrap items-center gap-2">
           {/* Chart metric selector buttons */}
-          <div className="flex items-center gap-1 rounded-lg border border-border bg-background p-1 text-xs">
+          <div className="flex flex-wrap items-center gap-1 rounded-lg border border-border bg-background p-1 text-xs w-full sm:w-auto">
             <Button
               variant={activeMetric === "temperature" ? "default" : "ghost"}
               size="xs"
@@ -684,7 +684,7 @@ export function HistoricalDataSection({
             )}
 
             {/* Legend */}
-            <div className="flex items-center gap-3 text-[11px]">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px]">
               {activeMetric === "temperature" && (
                 <>
                   <span className="flex items-center gap-1">

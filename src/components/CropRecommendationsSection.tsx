@@ -141,9 +141,9 @@ export function CropRecommendationsSection({}: CropRecommendationsSectionProps) 
   );
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 min-w-0">
       {/* 1. Header & Mandatory Data Notice */}
-      <Card className="border-border bg-card/90 p-5 shadow-xl backdrop-blur-xs flex flex-col gap-4">
+      <Card className="border-border bg-card/90 p-3.5 sm:p-5 shadow-xl backdrop-blur-xs flex flex-col gap-4 min-w-0">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
           <div>
             <div className="flex items-center gap-2">
@@ -202,7 +202,7 @@ export function CropRecommendationsSection({}: CropRecommendationsSectionProps) 
         </Alert>
 
         {/* Environmental Indicators Summary for Crops */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono pt-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs font-mono pt-1">
           <div className="rounded-lg bg-background/80 p-2.5 border border-border">
             <span className="text-muted-foreground text-[10px] uppercase block">Location &amp; Elevation</span>
             <span className="text-foreground font-bold">Green Valley, AZ</span>

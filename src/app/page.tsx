@@ -242,7 +242,7 @@ export default function GaiaApp() {
     providers.find((p) => p.id === "ollama_ai")?.status === "Configured";
 
   return (
-    <div className="min-h-screen bg-[#F5F3E9] text-[#28301C] flex font-sans">
+    <div className="min-h-screen bg-[#F5F3E9] text-[#28301C] flex font-sans overflow-x-clip">
       {/* 1. Left Sidebar Navigation (Desktop) */}
       <aside className="hidden lg:flex lg:w-72 lg:flex-col lg:fixed lg:inset-y-0 lg:left-0 z-40 border-r border-[#E2E6DA] bg-[#FFFFFF] shadow-sm justify-between">
         <div className="flex flex-col flex-1 overflow-y-auto">
@@ -358,15 +358,15 @@ export default function GaiaApp() {
       </aside>
 
       {/* 2. Mobile Top Navigation Bar (< lg screens) */}
-      <div className="lg:hidden fixed top-0 inset-x-0 z-30 flex items-center justify-between px-4 py-3 bg-[#FFFFFF] border-b border-[#E2E6DA] shadow-xs">
-        <div className="flex items-center gap-2.5">
+      <header className="lg:hidden fixed top-0 inset-x-0 z-30 flex items-center justify-between px-4 py-2.5 bg-[#FFFFFF] border-b border-[#E2E6DA] shadow-xs">
+        <div className="flex items-center gap-2.5 min-w-0">
           <GaiaLogo size={34} />
-          <div>
-            <div className="flex items-center gap-1.5">
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 flex-wrap">
               <span className="font-mono text-base font-bold text-[#28301C]">
                 GAIA
               </span>
-              <span className="text-[10px] text-[#687365] font-mono">
+              <span className="text-[10px] text-[#687365] font-mono truncate">
                 • Green Valley, AZ
               </span>
             </div>
@@ -376,7 +376,7 @@ export default function GaiaApp() {
         <button
           type="button"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="p-2 rounded-lg border border-[#E2E6DA] bg-[#FFFFFF] text-[#28301C] cursor-pointer transition-all duration-150 hover:bg-[#EEF0E6] hover:border-[#41644A] active:scale-95"
+          className="min-h-[44px] min-w-[44px] flex items-center justify-center p-2 rounded-lg border border-[#E2E6DA] bg-[#FFFFFF] text-[#28301C] cursor-pointer transition-all duration-150 hover:bg-[#EEF0E6] hover:border-[#41644A] active:scale-95 shrink-0"
           aria-label="Toggle navigation menu"
         >
           {mobileMenuOpen ? (
@@ -385,12 +385,12 @@ export default function GaiaApp() {
             <Menu className="size-5" />
           )}
         </button>
-      </div>
+      </header>
 
       {/* Mobile Drawer Overlay */}
       {mobileMenuOpen && (
         <div className="lg:hidden fixed inset-0 z-40 bg-black/40 backdrop-blur-xs flex">
-          <div className="w-72 max-w-[80vw] bg-[#FFFFFF] border-r border-[#E2E6DA] h-full flex flex-col justify-between shadow-2xl p-4">
+          <div className="w-72 max-w-[85vw] bg-[#FFFFFF] border-r border-[#E2E6DA] h-full flex flex-col justify-between shadow-2xl p-4 overflow-y-auto">
             <div className="space-y-4">
               <div className="flex items-center justify-between pb-3 border-b border-[#E2E6DA]">
                 <div className="flex items-center gap-2">
@@ -402,7 +402,8 @@ export default function GaiaApp() {
                 <button
                   type="button"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="cursor-pointer p-1.5 rounded-md text-[#687365] transition-all duration-150 hover:bg-[#EEF0E6] hover:text-[#28301C]"
+                  className="min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer p-1.5 rounded-md text-[#687365] transition-all duration-150 hover:bg-[#EEF0E6] hover:text-[#28301C]"
+                  aria-label="Close navigation menu"
                 >
                   <X className="size-5" />
                 </button>
@@ -419,7 +420,7 @@ export default function GaiaApp() {
                         setActiveTab(item.id);
                         setMobileMenuOpen(false);
                       }}
-                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-left transition-all duration-150 cursor-pointer active:scale-[0.98] ${
+                      className={`w-full min-h-[44px] flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-left transition-all duration-150 cursor-pointer active:scale-[0.98] ${
                         isActive
                           ? "bg-[#41644A] text-white font-bold hover:bg-[#34503B]"
                           : "text-[#28301C] hover:bg-[#EEF0E6] hover:text-[#243B2A] active:bg-[#DCE2D5]"
@@ -443,7 +444,7 @@ export default function GaiaApp() {
                 setMobileMenuOpen(false);
               }}
               disabled={isRefreshing || isLoading}
-              className="w-full"
+              className="w-full min-h-[44px] mt-4"
             >
               <RefreshCw
                 className={`size-3.5 mr-1.5 ${isRefreshing ? "animate-spin" : ""}`}
@@ -456,18 +457,18 @@ export default function GaiaApp() {
       )}
 
       {/* 3. Main Content Container (Pushed right by sidebar on desktop) */}
-      <div className="lg:pl-72 flex flex-col flex-1 min-h-screen w-full">
+      <div className="lg:pl-72 flex flex-col flex-1 min-h-screen w-full min-w-0">
         {/* Main Content Area */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 flex flex-col gap-6 w-full max-w-7xl mx-auto pt-16 lg:pt-8">
+        <main className="flex-1 p-3.5 sm:p-6 lg:p-8 flex flex-col gap-6 w-full max-w-7xl mx-auto pt-16 lg:pt-8 min-w-0">
           {/* Prototype Location Banner */}
           <Card className="border-[#E2E6DA] bg-[#FFFFFF] shadow-xs">
             <CardContent className="p-4 flex flex-wrap items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="flex size-9 items-center justify-center rounded-lg bg-[#EEF0E6] border border-[#E2E6DA] text-[#41644A]">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="flex size-9 items-center justify-center rounded-lg bg-[#EEF0E6] border border-[#E2E6DA] text-[#41644A] shrink-0">
                   <MapPin className="size-4" />
                 </div>
-                <div>
-                  <div className="flex items-center gap-2">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
                     <h2 className="text-base font-bold text-[#28301C]">
                       {GREEN_VALLEY_LOCATION.name}
                     </h2>
@@ -478,7 +479,7 @@ export default function GaiaApp() {
                       Active Prototype Site
                     </Badge>
                   </div>
-                  <div className="flex flex-wrap items-center gap-3 text-xs font-mono text-[#687365] mt-0.5">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-mono text-[#687365] mt-0.5">
                     <span>
                       Latitude: {GREEN_VALLEY_LOCATION.latitude.toFixed(4)}°N
                     </span>
@@ -489,16 +490,16 @@ export default function GaiaApp() {
                       Elevation: {GREEN_VALLEY_LOCATION.elevationMeters}m
                       (~3,150 ft)
                     </span>
-                    <span className="text-[#E2E6DA]">•</span>
+                    <span className="text-[#E2E6DA] hidden sm:inline">•</span>
                     <span>Zone: USDA 9a/9b (Low-to-Mid Sonoran Desert)</span>
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 w-full sm:w-auto">
                 <Badge
                   variant="outline"
-                  className="border-[#E2E6DA] bg-[#EEF0E6]/60 font-mono text-[11px] text-[#243B2A] px-3 py-1"
+                  className="border-[#E2E6DA] bg-[#EEF0E6]/60 font-mono text-[11px] text-[#243B2A] px-3 py-1 whitespace-normal sm:whitespace-nowrap text-center w-full sm:w-auto"
                 >
                   Dataset: 2021-01-01 to 2025-12-31 (1,826 days)
                 </Badge>
@@ -534,19 +535,19 @@ export default function GaiaApp() {
                   {/* Quick Feature Shortcut Banners */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <Card className="border-[#E2E6DA] bg-[#FFFFFF] shadow-xs">
-                      <CardContent className="p-4 flex flex-wrap items-center justify-between gap-4">
-                        <div className="flex items-center gap-3">
+                      <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
                           <ClipboardList className="size-6 text-[#41644A] shrink-0" />
-                          <div>
+                          <div className="min-w-0">
                             <h3 className="text-sm font-bold text-[#28301C]">
                               Farmer Intelligence (ADSS)
                             </h3>
-                            <p className="text-xs text-[#687365]">
+                            <p className="text-xs text-[#687365] line-clamp-2">
                               Register fields, upload tests, and track farming activities.
                             </p>
                           </div>
                         </div>
-                        <Button size="sm" onClick={() => setActiveTab("farmer_adss")}>
+                        <Button size="sm" onClick={() => setActiveTab("farmer_adss")} className="w-full sm:w-auto shrink-0">
                           Open ADSS{" "}
                           <ArrowRight
                             data-icon="inline-end"
@@ -557,19 +558,19 @@ export default function GaiaApp() {
                     </Card>
 
                     <Card className="border-[#E2E6DA] bg-[#FFFFFF] shadow-xs">
-                      <CardContent className="p-4 flex flex-wrap items-center justify-between gap-4">
-                        <div className="flex items-center gap-3">
+                      <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
                           <Sprout className="size-6 text-[#41644A] shrink-0" />
-                          <div>
+                          <div className="min-w-0">
                             <h3 className="text-sm font-bold text-[#28301C]">
                               Vegetable Suitability
                             </h3>
-                            <p className="text-xs text-[#687365]">
+                            <p className="text-xs text-[#687365] line-clamp-2">
                               15 vegetables evaluated against NASA climate extremes.
                             </p>
                           </div>
                         </div>
-                        <Button size="sm" onClick={() => setActiveTab("crops")}>
+                        <Button size="sm" onClick={() => setActiveTab("crops")} className="w-full sm:w-auto shrink-0">
                           View Crops{" "}
                           <ArrowRight
                             data-icon="inline-end"
@@ -580,14 +581,14 @@ export default function GaiaApp() {
                     </Card>
 
                     <Card className="border-[#E2E6DA] bg-[#FFFFFF] shadow-xs">
-                      <CardContent className="p-4 flex flex-wrap items-center justify-between gap-4">
-                        <div className="flex items-center gap-3">
+                      <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
                           <DollarSign className="size-6 text-[#41644A] shrink-0" />
-                          <div>
+                          <div className="min-w-0">
                             <h3 className="text-sm font-bold text-[#28301C]">
                               Farm Economics &amp; Profit
                             </h3>
-                            <p className="text-xs text-[#687365]">
+                            <p className="text-xs text-[#687365] line-clamp-2">
                               USDA market prices, UA enterprise budgets &amp; scenarios.
                             </p>
                           </div>
@@ -595,6 +596,7 @@ export default function GaiaApp() {
                         <Button
                           size="sm"
                           onClick={() => setActiveTab("economics")}
+                          className="w-full sm:w-auto shrink-0"
                         >
                           View Economics{" "}
                           <ArrowRight
@@ -710,7 +712,7 @@ export default function GaiaApp() {
         {/* Footer */}
         <footer className="mt-auto border-t border-[#E2E6DA] bg-[#FFFFFF] py-4 text-xs text-[#687365]">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
               <span className="font-bold text-[#28301C]">
                 GAIA Environmental Platform
               </span>
@@ -721,7 +723,7 @@ export default function GaiaApp() {
               <span>•</span>
               <span>UA Cooperative Extension</span>
             </div>
-            <div className="text-[11px] font-mono">
+            <div className="text-[11px] font-mono break-all sm:break-normal">
               Fixed Prototype Site: {GREEN_VALLEY_LOCATION.name} (
               {GREEN_VALLEY_LOCATION.latitude.toFixed(4)}°N,{" "}
               {GREEN_VALLEY_LOCATION.longitude.toFixed(4)}°W)

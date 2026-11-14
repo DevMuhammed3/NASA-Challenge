@@ -262,10 +262,10 @@ export function FarmerOnboardingModal({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto">
-      <div className="relative w-full max-w-4xl max-h-[92vh] flex flex-col rounded-2xl border border-[#E2E6DA] bg-[#FFFFFF] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4 overflow-y-auto">
+      <div className="relative w-full max-w-4xl max-h-[92vh] flex flex-col rounded-2xl border border-[#E2E6DA] bg-[#FFFFFF] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 min-w-0">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-[#E2E6DA] bg-[#EEF0E6] px-6 py-4">
+        <div className="flex items-center justify-between border-b border-[#E2E6DA] bg-[#EEF0E6] px-4 py-3 sm:px-6 sm:py-4">
           <div>
             <h2 className="text-lg font-bold text-[#28301C]">
               Farmer Onboarding & Farm Intelligence
@@ -958,7 +958,7 @@ export function FarmerOnboardingModal({
         </div>
 
         {/* Footer Navigation */}
-        <div className="flex items-center justify-between border-t border-[#E2E6DA] bg-[#EEF0E6] px-6 py-3.5">
+        <div className="flex flex-wrap items-center justify-between border-t border-[#E2E6DA] bg-[#EEF0E6] px-4 py-3 sm:px-6 sm:py-3.5 gap-2">
           <Button
             variant="outline"
             onClick={handleBack}
@@ -969,7 +969,7 @@ export function FarmerOnboardingModal({
             <span>Previous</span>
           </Button>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               variant="outline"
               onClick={() => handleSaveAndSubmit(true)}

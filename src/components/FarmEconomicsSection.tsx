@@ -159,9 +159,9 @@ export function FarmEconomicsSection() {
   const scenarios = data?.selectedCropScenarios;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 min-w-0">
       {/* Header Banner */}
-      <Card className="border-border bg-card p-6 shadow-sm">
+      <Card className="border-border bg-card p-4 sm:p-6 shadow-sm min-w-0">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-2">
@@ -295,7 +295,7 @@ export function FarmEconomicsSection() {
 
       {/* KPI Summary Cards */}
       {fin && (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
           {/* Card 1: Estimated Net Profit */}
           <Card className="border-border bg-card p-4 shadow-xs">
             <CardContent className="p-0 flex flex-col justify-between h-full">

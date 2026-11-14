@@ -168,11 +168,11 @@ export function FarmerDashboardSection() {
   const completeness = farm?.completeness;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 min-w-0">
       {/* Top Banner & Quick Actions */}
-      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[#E2E6DA] bg-[#FFFFFF] p-5 shadow-xs">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[#E2E6DA] bg-[#FFFFFF] p-4 sm:p-5 shadow-xs">
+        <div className="space-y-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="rounded-full bg-[#EEF0E6] px-2.5 py-0.5 text-[10px] font-mono font-bold text-[#41644A] border border-[#E2E6DA]">
               Farmer Decision Support System (ADSS)
             </span>
@@ -180,7 +180,7 @@ export function FarmerDashboardSection() {
               Tenant: {farm?.name || "Active Farm"}
             </span>
           </div>
-          <h1 className="text-xl font-bold text-[#28301C] flex items-center gap-2">
+          <h1 className="text-xl font-bold text-[#28301C] flex flex-wrap items-center gap-2">
             <span>{farm?.name || "Rancho Santa Cruz Demo Farm"}</span>
             <span className="text-xs font-normal text-[#687365]">
               ({farm?.regionName || "Green Valley, AZ"})
@@ -191,18 +191,18 @@ export function FarmerDashboardSection() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <Button
             variant="outline"
             onClick={() => setIsOnboardingOpen(true)}
-            className="text-xs font-semibold"
+            className="text-xs font-semibold w-full sm:w-auto"
           >
             Edit Farm Profile & Fields
           </Button>
           <Button
             variant="default"
             onClick={() => setShowAddActivity(true)}
-            className="text-xs font-bold bg-[#41644A] text-white flex items-center gap-1.5"
+            className="text-xs font-bold bg-[#41644A] text-white flex items-center justify-center gap-1.5 w-full sm:w-auto"
           >
             <Plus className="size-3.5" />
             <span>Record Farm Activity</span>
@@ -211,7 +211,7 @@ export function FarmerDashboardSection() {
       </div>
 
       {/* 1. Farm Overview Metrics Bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="p-4 bg-white border-[#E2E6DA]">
           <div className="flex items-center gap-2 text-xs font-semibold text-[#687365] mb-1">
             <MapPin className="size-3.5 text-[#41644A]" />
@@ -268,7 +268,7 @@ export function FarmerDashboardSection() {
       {/* 2. Farm Data Completeness & Missing Information Breakdown */}
       <Card className="border-[#E2E6DA] bg-white">
         <CardHeader className="pb-3 border-b border-[#E2E6DA]">
-          <CardTitle className="text-sm font-bold text-[#28301C] flex items-center justify-between">
+          <CardTitle className="text-sm font-bold text-[#28301C] flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <CheckCircle2 className="size-4 text-[#41644A]" />
               <span>Farm Data Completeness & Diagnostic Status</span>
@@ -282,7 +282,7 @@ export function FarmerDashboardSection() {
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-4 space-y-4">
-          <div className="grid grid-cols-2 sm:grid-cols-6 gap-3 text-center">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 text-center">
             <div className="rounded-xl border border-[#E2E6DA] bg-[#EEF0E6]/30 p-2.5">
               <div className="text-[11px] font-semibold text-[#687365]">Location</div>
               <div className="text-base font-bold text-[#28301C]">{completeness?.locationScore}%</div>
@@ -403,8 +403,8 @@ export function FarmerDashboardSection() {
                   }`}
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
+                    <div className="space-y-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
                         <span className="text-sm font-bold text-[#28301C]">
                           {idx + 1}. {rec.crop.name} ({rec.crop.scientificName})
                         </span>
@@ -435,7 +435,7 @@ export function FarmerDashboardSection() {
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-4 text-right">
+                    <div className="flex flex-wrap items-center justify-between sm:justify-end gap-3 text-left sm:text-right w-full sm:w-auto">
                       <div>
                         <div className="text-xs font-mono font-bold text-[#41644A]">
                           Est. Net Profit: ${rec.economicViability.estimatedNetProfitPerAcre.toLocaleString()}/acre
@@ -445,7 +445,7 @@ export function FarmerDashboardSection() {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1.5 shrink-0">
                         <button
                           type="button"
                           onClick={() => {
@@ -473,7 +473,7 @@ export function FarmerDashboardSection() {
                   </div>
 
                   {/* Multi-Dimensional Detail Strip */}
-                  <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2.5 border-t border-[#E2E6DA]/60 text-[11px]">
+                  <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 pt-2.5 border-t border-[#E2E6DA]/60 text-[11px]">
                     <div>
                       <span className="text-[#687365]">Seasonal Window:</span>{" "}
                       <span className="font-semibold text-[#28301C]">{rec.seasonalWindow}</span>
@@ -589,8 +589,8 @@ export function FarmerDashboardSection() {
 
       {/* Log Activity Modal */}
       {showAddActivity && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <div className="w-full max-w-md rounded-2xl border border-[#E2E6DA] bg-white p-5 shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3.5 sm:p-4 overflow-y-auto">
+          <div className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border border-[#E2E6DA] bg-white p-4 sm:p-5 shadow-2xl space-y-4 min-w-0">
             <div className="flex items-center justify-between border-b pb-3">
               <h3 className="text-sm font-bold text-[#28301C]">Log Farming Activity</h3>
               <button
@@ -676,8 +676,8 @@ export function FarmerDashboardSection() {
 
       {/* Recommendation Feedback Modal */}
       {feedbackCrop && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <div className="w-full max-w-md rounded-2xl border border-[#E2E6DA] bg-white p-5 shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3.5 sm:p-4 overflow-y-auto">
+          <div className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border border-[#E2E6DA] bg-white p-4 sm:p-5 shadow-2xl space-y-4 min-w-0">
             <div className="flex items-center justify-between border-b pb-3">
               <h3 className="text-sm font-bold text-[#28301C]">
                 Record Decision for {feedbackCrop.crop.name}
