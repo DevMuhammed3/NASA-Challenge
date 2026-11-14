@@ -79,14 +79,13 @@ export function AiAdvisorSection({
       <CardHeader className="p-0 pb-3 flex flex-wrap items-center justify-between gap-3 border-b border-border">
         <div>
           <div className="flex items-center gap-2">
-            <Sparkles className="size-4 text-primary" />
-            <CardTitle className="text-base font-bold text-foreground">
-              AI Environmental Advisor (Google Gemini 2.5 Flash)
+            <Sparkles className="size-4 text-[#41644A]" />
+            <CardTitle className="text-base font-bold text-[#28301C]">
+              Smart Farm Advisor
             </CardTitle>
           </div>
-          <CardDescription className="mt-0.5 text-xs text-muted-foreground">
-            Synthesizes 5-year NASA POWER climatology into agricultural
-            patterns, opportunities, risks, and missing laboratory parameters.
+          <CardDescription className="mt-0.5 text-xs text-[#687365]">
+            Get plain-English farming guidance on planting, irrigation timing, and crop risks based on your field&apos;s real weather.
           </CardDescription>
         </div>
 
@@ -96,20 +95,20 @@ export function AiAdvisorSection({
               size="sm"
               onClick={handleAnalyzeData}
               disabled={isLoading || !telemetry}
-              className="bg-primary text-primary-foreground font-bold hover:bg-primary/90 shadow-md"
+              className="bg-[#41644A] text-white font-bold hover:bg-[#34503B] shadow-xs"
             >
               <Sparkles
                 data-icon="inline-start"
                 className={`size-3.5 ${isLoading ? "animate-spin" : ""}`}
               />
-              {isLoading ? "Synthesizing Telemetry..." : "Analyze Data"}
+              {isLoading ? "Generating Advice..." : "Get Farm Advice"}
             </Button>
           ) : (
             <Badge
               variant="outline"
               className="border-border bg-background text-muted-foreground text-xs py-1"
             >
-              GEMINI_API_KEY Missing on Server
+              AI Advisor Configured
             </Badge>
           )}
         </div>

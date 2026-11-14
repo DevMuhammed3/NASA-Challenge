@@ -52,6 +52,27 @@ interface CropAdvisorReport {
   disclaimer: string;
 }
 
+const getCropEmoji = (name: string): string => {
+  const n = name.toLowerCase();
+  if (n.includes("tomato")) return "🍅";
+  if (n.includes("lettuce")) return "🥬";
+  if (n.includes("spinach")) return "🍃";
+  if (n.includes("carrot")) return "🥕";
+  if (n.includes("broccoli")) return "🥦";
+  if (n.includes("pepper") || n.includes("chili")) return "🫑";
+  if (n.includes("onion")) return "🧅";
+  if (n.includes("garlic")) return "🧄";
+  if (n.includes("corn")) return "🌽";
+  if (n.includes("cucumber")) return "🥒";
+  if (n.includes("squash") || n.includes("zucchini")) return "🪴";
+  if (n.includes("bean")) return "🫘";
+  if (n.includes("pea")) return "🫛";
+  if (n.includes("cabbage")) return "🥗";
+  if (n.includes("eggplant")) return "🍆";
+  if (n.includes("melon") || n.includes("watermelon")) return "🍉";
+  return "🌱";
+};
+
 export function CropRecommendationsSection({}: CropRecommendationsSectionProps) {
   const [summary, setSummary] = useState<RecommendationSummary | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -147,19 +168,19 @@ export function CropRecommendationsSection({}: CropRecommendationsSectionProps) 
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
           <div>
             <div className="flex items-center gap-2">
-              <Badge variant="outline" className="border-[#9A7E3B]/40 bg-[#9A7E3B]/20 text-[#28301C] font-semibold text-xs">
-                <Sprout className="size-3.5 mr-1 text-[#9A7E3B]" />
-                Evidence-Based Crop Evaluation
+              <Badge variant="outline" className="border-[#41644A]/40 bg-[#EEF0E6] text-[#243B2A] font-semibold text-xs">
+                <Sprout className="size-3.5 mr-1 text-[#41644A]" />
+                Vegetable Suitability Guide
               </Badge>
-              <Badge variant="outline" className="border-border bg-background/80 font-mono text-[11px] text-foreground">
+              <Badge variant="outline" className="border-[#E2E6DA] bg-white font-mono text-[11px] text-[#28301C]">
                 {GREEN_VALLEY_LOCATION.name}
               </Badge>
             </div>
-            <h2 className="mt-1 text-xl sm:text-2xl font-bold text-foreground">
-              Vegetable Suitability &amp; Planting Windows
+            <h2 className="mt-1 text-xl sm:text-2xl font-bold text-[#28301C]">
+              What to Plant in Green Valley, AZ
             </h2>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              Deterministic evaluation matching 5-year NASA POWER satellite climate observations (2021–2025) with verified University of Arizona Extension &amp; FAO requirements.
+            <p className="mt-0.5 text-xs text-[#687365]">
+              15 vegetables evaluated against NASA satellite climate data and University of Arizona Extension standards.
             </p>
           </div>
 
@@ -168,13 +189,13 @@ export function CropRecommendationsSection({}: CropRecommendationsSectionProps) 
               size="sm"
               onClick={handleAnalyzeBestCrops}
               disabled={isAiLoading || !summary}
-              className="bg-primary text-primary-foreground font-bold hover:bg-primary/90 shadow-md"
+              className="bg-[#41644A] text-white font-bold hover:bg-[#34503B] shadow-xs"
             >
               <Sparkles
                 data-icon="inline-start"
                 className={`size-3.5 ${isAiLoading ? "animate-spin" : ""}`}
               />
-              {isAiLoading ? "Consulting AI Advisor..." : "Analyze Best Crops"}
+              {isAiLoading ? "Analyzing crops..." : "Ask AI Crop Advisor"}
             </Button>
 
             {selectedForComparison.length > 0 && (
@@ -183,45 +204,42 @@ export function CropRecommendationsSection({}: CropRecommendationsSectionProps) 
                 size="sm"
                 onClick={() => setShowComparisonModal(true)}
               >
-                <Scale data-icon="inline-start" className="size-3.5 text-primary" />
-                Compare Crops ({selectedForComparison.length})
+                <Scale data-icon="inline-start" className="size-3.5 text-[#41644A]" />
+                Compare ({selectedForComparison.length})
               </Button>
             )}
           </div>
         </div>
 
-        {/* Farmer-Friendly Data Notice */}
-        <Alert className="border-primary/40 bg-primary/10 text-foreground">
-          <Info className="size-4 text-primary shrink-0" />
+        {/* Farmer-Friendly Tip */}
+        <Alert className="border-[#41644A]/30 bg-[#EEF0E6]/50 text-[#28301C]">
+          <Info className="size-4 text-[#41644A] shrink-0" />
           <AlertDescription className="text-xs leading-relaxed">
-            <strong className="text-foreground">Essential Ground Truth Notice:</strong> These recommendations are calculated from <strong>regional atmospheric satellite data</strong> (temperatures, solar irradiance, rainfall patterns) and published university horticultural standards. They assume a functioning <strong>irrigation system</strong>. 
-            <span className="block mt-1 text-muted-foreground">
-              NASA satellite sensors cannot measure your specific farm soil pH, salt levels (salinity EC), nutrients (NPK), or subsoil drainage. Always verify your soil through a certified laboratory before purchasing seeds or equipment.
-            </span>
+            <strong>Grower Tip:</strong> In Southern Arizona&apos;s desert climate, timing your planting window is critical to avoid peak summer heat or winter frost. All crops require consistent <strong>drip irrigation</strong> due to low annual rainfall.
           </AlertDescription>
         </Alert>
 
         {/* Environmental Indicators Summary for Crops */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs font-mono pt-1">
-          <div className="rounded-lg bg-background/80 p-2.5 border border-border">
-            <span className="text-muted-foreground text-[10px] uppercase block">Location &amp; Elevation</span>
-            <span className="text-foreground font-bold">Green Valley, AZ</span>
-            <span className="text-[10px] text-muted-foreground block">962m / ~3,150 ft (Low-Mid Desert)</span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs pt-1">
+          <div className="rounded-xl bg-[#EEF0E6]/50 p-2.5 border border-[#E2E6DA]">
+            <span className="text-[#687365] text-[10px] uppercase block font-semibold">Location &amp; Elevation</span>
+            <span className="text-[#28301C] font-bold">Green Valley, AZ</span>
+            <span className="text-[10px] text-[#687365] block">3,150 ft (Sonoran Desert Zone 9b)</span>
           </div>
-          <div className="rounded-lg bg-background/80 p-2.5 border border-border">
-            <span className="text-muted-foreground text-[10px] uppercase block">Temperature Extremes</span>
-            <span className="text-foreground font-bold">-4.4°C to 45.0°C</span>
-            <span className="text-[10px] text-primary block">Bimodal seasonal swings</span>
+          <div className="rounded-xl bg-[#EEF0E6]/50 p-2.5 border border-[#E2E6DA]">
+            <span className="text-[#687365] text-[10px] uppercase block font-semibold">Temperature Range</span>
+            <span className="text-[#28301C] font-bold">24°F to 113°F (-4°C to 45°C)</span>
+            <span className="text-[10px] text-[#41644A] block">Two distinct growing seasons</span>
           </div>
-          <div className="rounded-lg bg-background/80 p-2.5 border border-border">
-            <span className="text-muted-foreground text-[10px] uppercase block">Annual Rainfall Deficit</span>
-            <span className="text-sky-400 font-bold">306.8 mm/yr avg</span>
-            <span className="text-[10px] text-destructive block">Drip irrigation strictly mandatory</span>
+          <div className="rounded-xl bg-[#EEF0E6]/50 p-2.5 border border-[#E2E6DA]">
+            <span className="text-[#687365] text-[10px] uppercase block font-semibold">Irrigation Requirement</span>
+            <span className="text-[#41644A] font-bold">Drip System Required</span>
+            <span className="text-[10px] text-[#687365] block">Average 12.1 inches rain/year</span>
           </div>
-          <div className="rounded-lg bg-background/80 p-2.5 border border-border">
-            <span className="text-muted-foreground text-[10px] uppercase block">Solar Resource</span>
-            <span className="text-foreground font-bold">21.1 MJ/m²/day</span>
-            <span className="text-[10px] text-[#9A7E3B] font-semibold block">Abundant photosynthetic light</span>
+          <div className="rounded-xl bg-[#EEF0E6]/50 p-2.5 border border-[#E2E6DA]">
+            <span className="text-[#687365] text-[10px] uppercase block font-semibold">Solar Sunlight</span>
+            <span className="text-[#28301C] font-bold">21.1 MJ/m²/day</span>
+            <span className="text-[10px] text-[#41644A] block">High sunlight for rapid growth</span>
           </div>
         </div>
       </Card>
@@ -388,69 +406,71 @@ export function CropRecommendationsSection({}: CropRecommendationsSectionProps) 
                 }`}
               >
                 {/* Card Top */}
-                <CardContent className="p-5 flex flex-col gap-3">
+                <CardContent className="p-4 sm:p-5 flex flex-col gap-3">
                   {/* Badges row */}
                   <div className="flex flex-wrap items-center justify-between gap-1.5 text-xs">
                     <Badge
                       variant="outline"
                       className={
                         isTopSuitable
-                          ? "border-[#9A7E3B]/40 bg-[#9A7E3B]/20 text-[#28301C] font-bold text-[11px]"
-                          : "border-primary/40 bg-primary/20 text-primary font-semibold text-[11px]"
+                          ? "border-[#41644A]/40 bg-[#EEF0E6] text-[#243B2A] font-bold text-[11px]"
+                          : "border-amber-300 bg-amber-50 text-amber-900 font-semibold text-[11px]"
                       }
                     >
                       {isTopSuitable ? (
-                        <CheckCircle2 className="size-3 mr-1 text-[#9A7E3B]" />
+                        <CheckCircle2 className="size-3 mr-1 text-[#41644A]" />
                       ) : (
-                        <AlertTriangle className="size-3 mr-1" />
+                        <AlertTriangle className="size-3 mr-1 text-amber-700" />
                       )}
-                      {item.classification}
+                      {isTopSuitable ? "Suitable with Irrigation" : "Conditional / Extra Care"}
                     </Badge>
 
-                    <Badge variant="outline" className="border-border bg-background font-mono text-[10px] text-muted-foreground capitalize">
+                    <Badge variant="outline" className="border-[#E2E6DA] bg-white font-mono text-[10px] text-[#687365] capitalize">
                       {item.crop.category.replace("_", " ")}
                     </Badge>
                   </div>
 
-                  {/* Crop Header */}
-                  <div>
-                    <h3 className="text-lg font-bold text-foreground">
-                      {item.crop.name}
-                    </h3>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground italic">
-                      <span>{item.crop.scientificName}</span>
-                      <span>•</span>
-                      <span>{item.crop.botanicalFamily}</span>
+                  {/* Crop Header with Emoji */}
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-3xl shrink-0">{getCropEmoji(item.crop.name)}</span>
+                    <div className="min-w-0">
+                      <h3 className="text-base font-bold text-[#28301C]">
+                        {item.crop.name}
+                      </h3>
+                      <div className="flex items-center gap-1.5 text-xs text-[#687365]">
+                        <span className="italic">{item.crop.scientificName}</span>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Recommended Season */}
-                  <div className="rounded-lg bg-background/80 p-2.5 border border-border text-xs">
-                    <span className="text-muted-foreground text-[10px] uppercase block font-semibold">
-                      Recommended Planting Window (UA Extension)
-                    </span>
-                    <span className="text-foreground font-medium mt-0.5 block">
-                      {item.crop.suitablePlantingWindows
-                        .map((w) => w.seasonName)
-                        .join(" or ")}
-                    </span>
-                    <span className="text-[11px] text-primary font-mono mt-0.5 block">
-                      Harvest: {item.crop.suitablePlantingWindows[0]?.harvestWindow}
-                    </span>
+                  {/* Quick Farmer Chips */}
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="p-2 rounded-xl bg-[#EEF0E6]/50 border border-[#E2E6DA]">
+                      <span className="text-[10px] uppercase font-semibold text-[#687365] block">
+                        When to Plant
+                      </span>
+                      <span className="font-bold text-[#28301C] block mt-0.5 truncate">
+                        {item.crop.suitablePlantingWindows[0]?.seasonName || "Seasonal"}
+                      </span>
+                    </div>
+                    <div className="p-2 rounded-xl bg-[#EEF0E6]/50 border border-[#E2E6DA]">
+                      <span className="text-[10px] uppercase font-semibold text-[#687365] block">
+                        Water Demand
+                      </span>
+                      <span className="font-bold text-[#41644A] block mt-0.5 capitalize truncate">
+                        {item.crop.waterRequirements.category || "Moderate Drip"}
+                      </span>
+                    </div>
                   </div>
 
                   {/* Supporting Factors */}
-                  <div className="flex flex-col gap-1.5 text-xs">
-                    <span className="font-semibold text-[#9A7E3B] text-[11px] uppercase tracking-wide block">
-                      Key Climatic Supports:
+                  <div className="flex flex-col gap-1 text-xs">
+                    <span className="font-semibold text-[#41644A] text-[11px] block">
+                      Why it grows well here:
                     </span>
-                    <ul className="list-disc list-inside flex flex-col gap-1 text-foreground/90 text-[11px]">
-                      {item.primarySupportingFactors.slice(0, 2).map((s, idx) => (
-                        <li key={idx} className="leading-snug">
-                          {s}
-                        </li>
-                      ))}
-                    </ul>
+                    <p className="text-xs text-[#28301C] leading-snug">
+                      {item.primarySupportingFactors[0] || "Well suited for local seasonal temperature bands."}
+                    </p>
                   </div>
 
                   {/* Risks */}

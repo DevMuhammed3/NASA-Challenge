@@ -173,21 +173,21 @@ export function FarmerDashboardSection() {
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[#E2E6DA] bg-[#FFFFFF] p-4 sm:p-5 shadow-xs">
         <div className="space-y-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full bg-[#EEF0E6] px-2.5 py-0.5 text-[10px] font-mono font-bold text-[#41644A] border border-[#E2E6DA]">
-              Farmer Decision Support System (ADSS)
+            <span className="rounded-full bg-[#EEF0E6] px-2.5 py-0.5 text-xs font-semibold text-[#41644A] border border-[#E2E6DA]">
+              Field Management &amp; Activity Log
             </span>
-            <span className="text-[11px] text-[#687365]">
-              Tenant: {farm?.name || "Active Farm"}
+            <span className="text-xs text-[#687365]">
+              {farm?.name || "Active Farm"}
             </span>
           </div>
-          <h1 className="text-xl font-bold text-[#28301C] flex flex-wrap items-center gap-2">
+          <h1 className="text-xl sm:text-2xl font-bold text-[#28301C] flex flex-wrap items-center gap-2">
             <span>{farm?.name || "Rancho Santa Cruz Demo Farm"}</span>
             <span className="text-xs font-normal text-[#687365]">
               ({farm?.regionName || "Green Valley, AZ"})
             </span>
           </h1>
           <p className="text-xs text-[#687365]">
-            Combining verified NASA POWER satellite telemetry, USDA NRCS SSURGO soils, and your farm records.
+            Manage your fields, record daily water or harvest activities, and get personalized crop recommendations.
           </p>
         </div>
 
@@ -197,15 +197,15 @@ export function FarmerDashboardSection() {
             onClick={() => setIsOnboardingOpen(true)}
             className="text-xs font-semibold w-full sm:w-auto"
           >
-            Edit Farm Profile & Fields
+            Edit Farm &amp; Soil Test
           </Button>
           <Button
             variant="default"
             onClick={() => setShowAddActivity(true)}
             className="text-xs font-bold bg-[#41644A] text-white flex items-center justify-center gap-1.5 w-full sm:w-auto"
           >
-            <Plus className="size-3.5" />
-            <span>Record Farm Activity</span>
+            <Plus className="size-4" />
+            <span>Log Farm Activity</span>
           </Button>
         </div>
       </div>

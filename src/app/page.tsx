@@ -57,45 +57,45 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   {
     id: "dashboard",
-    label: "Dashboard",
+    label: "Weather & Soil Today",
     icon: Compass,
-    description: "Real-time agroclimatology & soil",
+    description: "Live field weather & moisture",
   },
   {
     id: "farmer_adss",
-    label: "Farm Intelligence (ADSS)",
+    label: "My Farm & Fields",
     icon: ClipboardList,
-    description: "My farm, field plots & activities",
+    description: "Plots, soil logs & farm setup",
   },
   {
     id: "crops",
-    label: "Crop Recommendations",
+    label: "What to Plant",
     icon: Sprout,
-    description: "15-vegetable suitability engine",
-  },
-  {
-    id: "historical",
-    label: "5-Year Climate History",
-    icon: TrendingUp,
-    description: "NASA POWER 2021–2025 records",
+    description: "Best crops for your season & soil",
   },
   {
     id: "economics",
-    label: "Farm Economics & Profit",
+    label: "Crop Profits & Prices",
     icon: DollarSign,
-    description: "USDA market prices & budgets",
+    description: "Expected income & market prices",
   },
   {
     id: "advisor",
-    label: "AI Environmental Advisor",
+    label: "Smart Farm Advisor",
     icon: Sparkles,
-    description: "Grounded telemetry synthesis",
+    description: "Instant AI advice for your farm",
+  },
+  {
+    id: "historical",
+    label: "Weather Trends",
+    icon: TrendingUp,
+    description: "Past rain & temperature records",
   },
   {
     id: "providers",
-    label: "Data Sources & Telemetry",
+    label: "Connected Sensors",
     icon: Database,
-    description: "Verified APIs & SSURGO status",
+    description: "NASA satellite & USDA status",
   },
 ];
 
@@ -532,82 +532,118 @@ export default function GaiaApp() {
                 </div>
               ) : telemetry ? (
                 <>
-                  {/* Quick Feature Shortcut Banners */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <Card className="border-[#E2E6DA] bg-[#FFFFFF] shadow-xs">
-                      <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <ClipboardList className="size-6 text-[#41644A] shrink-0" />
-                          <div className="min-w-0">
-                            <h3 className="text-sm font-bold text-[#28301C]">
-                              Farmer Intelligence (ADSS)
-                            </h3>
-                            <p className="text-xs text-[#687365] line-clamp-2">
-                              Register fields, upload tests, and track farming activities.
-                            </p>
+                  {/* Quick Farmer Shortcuts */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+                    <Card className="border-[#E2E6DA] bg-[#FFFFFF] shadow-xs hover:border-[#41644A] transition-all">
+                      <CardContent className="p-4 flex flex-col justify-between h-full gap-3">
+                        <div className="flex items-start gap-3">
+                          <div className="p-2 rounded-xl bg-[#EEF0E6] text-[#41644A]">
+                            <ClipboardList className="size-5" />
                           </div>
-                        </div>
-                        <Button size="sm" onClick={() => setActiveTab("farmer_adss")} className="w-full sm:w-auto shrink-0">
-                          Open ADSS{" "}
-                          <ArrowRight
-                            data-icon="inline-end"
-                            className="size-3.5"
-                          />
-                        </Button>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="border-[#E2E6DA] bg-[#FFFFFF] shadow-xs">
-                      <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <Sprout className="size-6 text-[#41644A] shrink-0" />
-                          <div className="min-w-0">
+                          <div>
                             <h3 className="text-sm font-bold text-[#28301C]">
-                              Vegetable Suitability
+                              My Farm &amp; Fields
                             </h3>
-                            <p className="text-xs text-[#687365] line-clamp-2">
-                              15 vegetables evaluated against NASA climate extremes.
-                            </p>
-                          </div>
-                        </div>
-                        <Button size="sm" onClick={() => setActiveTab("crops")} className="w-full sm:w-auto shrink-0">
-                          View Crops{" "}
-                          <ArrowRight
-                            data-icon="inline-end"
-                            className="size-3.5"
-                          />
-                        </Button>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="border-[#E2E6DA] bg-[#FFFFFF] shadow-xs">
-                      <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <DollarSign className="size-6 text-[#41644A] shrink-0" />
-                          <div className="min-w-0">
-                            <h3 className="text-sm font-bold text-[#28301C]">
-                              Farm Economics &amp; Profit
-                            </h3>
-                            <p className="text-xs text-[#687365] line-clamp-2">
-                              USDA market prices, UA enterprise budgets &amp; scenarios.
+                            <p className="text-xs text-[#687365] mt-0.5">
+                              Check field plots and log watering or harvests.
                             </p>
                           </div>
                         </div>
                         <Button
                           size="sm"
-                          onClick={() => setActiveTab("economics")}
-                          className="w-full sm:w-auto shrink-0"
+                          variant="outline"
+                          onClick={() => setActiveTab("farmer_adss")}
+                          className="w-full justify-between text-xs font-semibold"
                         >
-                          View Economics{" "}
-                          <ArrowRight
-                            data-icon="inline-end"
-                            className="size-3.5"
-                          />
+                          <span>Open My Farm</span>
+                          <ArrowRight className="size-3.5 text-[#41644A]" />
+                        </Button>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border-[#E2E6DA] bg-[#FFFFFF] shadow-xs hover:border-[#41644A] transition-all">
+                      <CardContent className="p-4 flex flex-col justify-between h-full gap-3">
+                        <div className="flex items-start gap-3">
+                          <div className="p-2 rounded-xl bg-[#EEF0E6] text-[#41644A]">
+                            <Sprout className="size-5" />
+                          </div>
+                          <div>
+                            <h3 className="text-sm font-bold text-[#28301C]">
+                              What to Plant
+                            </h3>
+                            <p className="text-xs text-[#687365] mt-0.5">
+                              15 vegetables ranked for season, water and heat.
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setActiveTab("crops")}
+                          className="w-full justify-between text-xs font-semibold"
+                        >
+                          <span>View Crops</span>
+                          <ArrowRight className="size-3.5 text-[#41644A]" />
+                        </Button>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border-[#E2E6DA] bg-[#FFFFFF] shadow-xs hover:border-[#41644A] transition-all">
+                      <CardContent className="p-4 flex flex-col justify-between h-full gap-3">
+                        <div className="flex items-start gap-3">
+                          <div className="p-2 rounded-xl bg-[#EEF0E6] text-[#41644A]">
+                            <DollarSign className="size-5" />
+                          </div>
+                          <div>
+                            <h3 className="text-sm font-bold text-[#28301C]">
+                              Crop Profits &amp; Prices
+                            </h3>
+                            <p className="text-xs text-[#687365] mt-0.5">
+                              Local market prices and estimated $/acre income.
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setActiveTab("economics")}
+                          className="w-full justify-between text-xs font-semibold"
+                        >
+                          <span>Check Profits</span>
+                          <ArrowRight className="size-3.5 text-[#41644A]" />
+                        </Button>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border-[#E2E6DA] bg-[#FFFFFF] shadow-xs hover:border-[#41644A] transition-all">
+                      <CardContent className="p-4 flex flex-col justify-between h-full gap-3">
+                        <div className="flex items-start gap-3">
+                          <div className="p-2 rounded-xl bg-[#EEF0E6] text-[#41644A]">
+                            <Sparkles className="size-5" />
+                          </div>
+                          <div>
+                            <h3 className="text-sm font-bold text-[#28301C]">
+                              Smart Farm Advisor
+                            </h3>
+                            <p className="text-xs text-[#687365] mt-0.5">
+                              Ask questions about watering, planting &amp; weather.
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setActiveTab("advisor")}
+                          className="w-full justify-between text-xs font-semibold"
+                        >
+                          <span>Ask Advisor</span>
+                          <ArrowRight className="size-3.5 text-[#41644A]" />
                         </Button>
                       </CardContent>
                     </Card>
                   </div>
 
+                  {/* Main Weather & Soil Metrics */}
                   <DashboardMetrics
                     location={telemetry.location}
                     latestObservation={telemetry.latestObservation}
@@ -622,32 +658,13 @@ export default function GaiaApp() {
 
                   {/* Satellite Imagery Preview */}
                   <div className="grid grid-cols-1 gap-6">
-                    <div className="lg:col-span-2">
+                    <div>
                       <NasaInteractiveMap
                         lat={GREEN_VALLEY_LOCATION.latitude}
                         lon={GREEN_VALLEY_LOCATION.longitude}
                         locationName={GREEN_VALLEY_LOCATION.name}
                       />
                     </div>
-                  </div>
-
-                  {/* Historical Charts Quick Section */}
-                  <HistoricalDataSection
-                    monthlyAggregates={telemetry.monthlyAggregates}
-                    recentObservations={telemetry.recentDailyObservations}
-                    totalObservationsCount={telemetry.totalObservationsCount}
-                    parameterMetadata={telemetry.parameterMetadata}
-                  />
-                  <div className="flex flex-col gap-6">
-                    <DataSourcesPanel
-                      providers={providers}
-                      isLoading={isLoading}
-                      onRefresh={fetchProviderStatuses}
-                    />
-                    <AiAdvisorSection
-                      telemetry={telemetry}
-                      geminiAvailable={geminiAvailable}
-                    />
                   </div>
                 </>
               ) : null}

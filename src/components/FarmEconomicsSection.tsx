@@ -165,18 +165,18 @@ export function FarmEconomicsSection() {
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-2">
-              <div className="flex size-9 items-center justify-center rounded-lg bg-[#9A7E3B] text-white">
+              <div className="flex size-9 items-center justify-center rounded-lg bg-[#41644A] text-white">
                 <DollarSign className="size-5" />
               </div>
-              <h2 className="text-xl font-bold text-foreground">
-                Farm Benefits &amp; Profitability
+              <h2 className="text-xl sm:text-2xl font-bold text-[#28301C]">
+                Crop Profits &amp; Market Prices
               </h2>
-              <Badge variant="outline" className="border-border bg-background/80 font-mono text-xs font-semibold text-primary">
-                Green Valley, AZ • 2026 Model
+              <Badge variant="outline" className="border-[#41644A]/40 bg-[#EEF0E6] font-mono text-xs font-semibold text-[#243B2A]">
+                Green Valley, AZ • USDA Market Data
               </Badge>
             </div>
-            <p className="text-xs text-muted-foreground max-w-3xl">
-              Deterministic enterprise budgeting engine paired with USDA AMS MyMarketNews wholesale shipping point quotes (Report 2403) and University of Arizona Cooperative Extension cost baselines.
+            <p className="text-xs text-[#687365] max-w-3xl">
+              Calculate expected harvest income, input costs, and net profit per acre based on wholesale market quotes and University of Arizona enterprise budgets.
             </p>
           </div>
 
