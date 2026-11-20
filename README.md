@@ -17,6 +17,12 @@
 
 GAIA is a Next.js 16 decision-support application for arid-climate agriculture. It brings five years of NASA agroclimatology, satellite imagery, USDA soil surveys, wholesale market prices and agricultural statistics into a single workspace, then layers deterministic agronomy and economics engines on top. A grounded Gemini or Ollama advisor explains the results; it never invents them.
 
+> [!WARNING]
+> **Prototype / proof of concept.** GAIA was built in roughly 12 hours for the
+> NASA Space Apps Challenge. It is a demonstration, not production software.
+> Data can be incomplete and AI output can be wrong — do not use it for real
+> farming or financial decisions.
+
 The current build is anchored to **Green Valley, Arizona** (`31.8543°N, -111.0000°W`), the reference site used during the challenge. Every screen is built around one principle: **a number is either measured and attributed, or it is explicitly unavailable.**
 
 ## Highlights
@@ -45,6 +51,7 @@ The current build is anchored to **Green Valley, Arizona** (`31.8543°N, -111.00
 - [Testing](#testing)
 - [Deployment](#deployment)
 - [Current limitations](#current-limitations)
+  - [Prototype status](#prototype-status)
 - [Credits](#credits)
 - [Acknowledgements](#acknowledgements)
 - [License](#license)
@@ -333,6 +340,12 @@ The app deploys to Vercel without a custom build configuration:
 Set `DATABASE_URL` only if you need the database-backed routes, and make sure the database accepts connections from your deployment region.
 
 ## Current limitations
+
+### Prototype status
+
+This repository is a **12-hour hackathon proof of concept**. It was assembled quickly to demonstrate the idea, so expect rough edges, hard-coded assumptions and unverified outputs. It is not production-ready and must not be used to make real agronomic or financial decisions.
+
+The limitations below describe what is intentionally unfinished or deliberately scoped out of the demo.
 
 - **Single reference site.** Calculations and copy are anchored to Green Valley, Arizona. Geocoding exists, but multi-farm geographic support is not a finished journey.
 - **In-memory farmer store.** The farmer API resets on restart. The 15-table domain schema is designed for PostgreSQL but not yet wired to it.
