@@ -11,6 +11,7 @@ import {
   RefreshCw,
   MapPin,
   AlertCircle,
+  AlertTriangle,
   Radio,
   ArrowRight,
   DollarSign,
@@ -250,7 +251,7 @@ export default function GaiaApp() {
           <div className="p-5 border-b border-[#E2E6DA] flex items-center gap-3 bg-[#FFFFFF]">
             <GaiaLogo />
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-1.5">
                 <span className="font-mono text-xl font-black tracking-tight text-[#28301C]">
                   GAIA
                 </span>
@@ -259,6 +260,12 @@ export default function GaiaApp() {
                   className="border-[#41644A]/40 bg-[#EEF0E6] text-[#243B2A] font-mono text-[9px] font-bold"
                 >
                   MVP
+                </Badge>
+                <Badge
+                  variant="outline"
+                  className="border-amber-300 bg-amber-50 text-amber-900 font-mono text-[9px] font-bold"
+                >
+                  PROTOTYPE
                 </Badge>
               </div>
               <p className="text-[11px] text-[#687365] font-medium leading-tight mt-0.5">
@@ -460,6 +467,20 @@ export default function GaiaApp() {
       <div className="lg:pl-72 flex flex-col flex-1 min-h-screen w-full min-w-0">
         {/* Main Content Area */}
         <main className="flex-1 p-3.5 sm:p-6 lg:p-8 flex flex-col gap-6 w-full max-w-7xl mx-auto pt-16 lg:pt-8 min-w-0">
+          {/* Prototype / POC Warning Banner */}
+          <Alert className="border-amber-300 bg-amber-50 text-amber-900">
+            <AlertTriangle className="size-4" />
+            <AlertTitle className="font-bold">
+              Prototype — Proof of Concept
+            </AlertTitle>
+            <AlertDescription className="text-amber-900/90">
+              GAIA was built in ~12 hours for the NASA Space Apps Challenge.
+              It&apos;s a proof of concept, not production software — data may be
+              incomplete and AI output may be wrong. Please don&apos;t use it for
+              real farming or financial decisions.
+            </AlertDescription>
+          </Alert>
+
           {/* Prototype Location Banner */}
           <Card className="border-[#E2E6DA] bg-[#FFFFFF] shadow-xs">
             <CardContent className="p-4 flex flex-wrap items-center justify-between gap-4">
@@ -740,10 +761,15 @@ export default function GaiaApp() {
               <span>•</span>
               <span>UA Cooperative Extension</span>
             </div>
-            <div className="text-[11px] font-mono break-all sm:break-normal">
-              Fixed Prototype Site: {GREEN_VALLEY_LOCATION.name} (
-              {GREEN_VALLEY_LOCATION.latitude.toFixed(4)}°N,{" "}
-              {GREEN_VALLEY_LOCATION.longitude.toFixed(4)}°W)
+            <div className="flex flex-col gap-1 sm:items-end">
+              <div className="text-[11px] font-mono break-all sm:break-normal">
+                Fixed Prototype Site: {GREEN_VALLEY_LOCATION.name} (
+                {GREEN_VALLEY_LOCATION.latitude.toFixed(4)}°N,{" "}
+                {GREEN_VALLEY_LOCATION.longitude.toFixed(4)}°W)
+              </div>
+              <div className="text-[11px] font-mono font-semibold text-amber-800">
+                Prototype / POC — built in ~12 hours. Not for production use.
+              </div>
             </div>
           </div>
         </footer>
